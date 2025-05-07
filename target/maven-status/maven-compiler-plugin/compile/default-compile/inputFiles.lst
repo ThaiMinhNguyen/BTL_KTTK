@@ -13,8 +13,11 @@ D:\WorkSpace2\KTTK\SpringBoot\BTL_KTTK\src\main\java\com\nemo\btl_kttk\dao\SlotT
 D:\WorkSpace2\KTTK\SpringBoot\BTL_KTTK\src\main\java\com\nemo\btl_kttk\dao\UserDAO.java
 D:\WorkSpace2\KTTK\SpringBoot\BTL_KTTK\src\main\java\com\nemo\btl_kttk\models\EmployeeShift.java
 D:\WorkSpace2\KTTK\SpringBoot\BTL_KTTK\src\main\java\com\nemo\btl_kttk\servlets\LoginServlet.java
+D:\WorkSpace2\KTTK\SpringBoot\BTL_KTTK\src\main\java\com\nemo\btl_kttk\dao\WorkScheduleSlotDAO.java
 D:\WorkSpace2\KTTK\SpringBoot\BTL_KTTK\src\main\java\com\nemo\btl_kttk\models\WorkSchedule.java
 D:\WorkSpace2\KTTK\SpringBoot\BTL_KTTK\src\main\java\com\nemo\btl_kttk\models\WorkScheduleSlot.java
+D:\WorkSpace2\KTTK\SpringBoot\BTL_KTTK\src\main\java\com\nemo\btl_kttk\dao\WorkScheduleDAO.java
 D:\WorkSpace2\KTTK\SpringBoot\BTL_KTTK\src\main\java\com\nemo\btl_kttk\models\TimeRecord.java
 D:\WorkSpace2\KTTK\SpringBoot\BTL_KTTK\src\main\java\com\nemo\btl_kttk\dao\TimeRecordDAO.java
 D:\WorkSpace2\KTTK\SpringBoot\BTL_KTTK\src\main\java\com\nemo\btl_kttk\servlets\LogoutServlet.java
+D:\WorkSpace2\KTTK\SpringBoot\BTL_KTTK\src\main\java\com\nemo\btl_kttk\servlets\ScheduleManagementServlet.java

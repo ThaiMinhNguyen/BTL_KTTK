@@ -5,7 +5,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trang chính nhân viên</title>
+    <title>Trang chính quản lý</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -50,6 +50,7 @@
             padding: 8px 16px;
             border-radius: 4px;
             cursor: pointer;
+            text-decoration: none;
         }
         
         .content {
@@ -99,6 +100,12 @@
             response.sendRedirect("login");
             return;
         }
+        
+        // Kiểm tra quyền
+        if (!"MANAGER".equals(user.getRole()) && !"ADMIN".equals(user.getRole())) {
+            response.sendRedirect("home");
+            return;
+        }
     %>
     <div class="header">
         <h1>Hệ thống quản lý ca làm việc</h1>
@@ -110,10 +117,11 @@
     
     <div class="container">
         <div class="content">
-            <div class="title">Các chức năng của nhân viên</div>
+            <div class="title">Các chức năng của quản lý</div>
             
             <div class="functions">
-                <a href="shift-register" class="function-btn" id="btnDangKyLich">Đăng ký lịch</a>
+                <a href="schedule-management" class="function-btn" id="btnQuanLyLich">Quản lý lịch</a>
+                <a href="payment-management" class="function-btn" id="btnThanhToanTienCong">Thanh toán tiền công</a>
             </div>
         </div>
     </div>

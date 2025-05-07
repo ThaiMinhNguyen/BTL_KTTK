@@ -5,6 +5,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Time;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,8 +25,8 @@ public class SlotTemplateDAO extends DAO {
                 SlotTemplate slotTemplate = new SlotTemplate();
                 slotTemplate.setId(rs.getInt("id"));
                 slotTemplate.setDayOfWeek(rs.getString("dayOfWeek"));
-                slotTemplate.setStartTime(rs.getDate("startTime"));
-                slotTemplate.setEndTime(rs.getDate("endTime"));
+                slotTemplate.setStartTime(rs.getTime("startTime"));
+                slotTemplate.setEndTime(rs.getTime("endTime"));
                 slotTemplate.setMaxEmployee(rs.getInt("maxEmployee"));
                 return slotTemplate;
             }
@@ -33,6 +34,34 @@ public class SlotTemplateDAO extends DAO {
             e.printStackTrace();
         }
         return null;
+    }
+    
+    /**
+     * Lấy tất cả template thuộc về một lịch làm việc
+     * 
+     * @param workScheduleId ID của lịch làm việc
+     * @return Danh sách các template
+     */
+    public List<SlotTemplate> getTemplatesByTemplateId(int workScheduleId) {
+        List<SlotTemplate> templates = new ArrayList<>();
+        String sql = "SELECT * FROM SlotTemplate WHERE workScheduleId = ?";
+        try {
+            PreparedStatement ps = connection.prepareStatement(sql);
+            ps.setInt(1, workScheduleId);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                SlotTemplate slotTemplate = new SlotTemplate();
+                slotTemplate.setId(rs.getInt("id"));
+                slotTemplate.setDayOfWeek(rs.getString("dayOfWeek"));
+                slotTemplate.setStartTime(rs.getTime("startTime"));
+                slotTemplate.setEndTime(rs.getTime("endTime"));
+                slotTemplate.setMaxEmployee(rs.getInt("maxEmployee"));
+                templates.add(slotTemplate);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return templates;
     }
     
     public List<SlotTemplate> getAllTemplates() {
@@ -45,8 +74,8 @@ public class SlotTemplateDAO extends DAO {
                 SlotTemplate slotTemplate = new SlotTemplate();
                 slotTemplate.setId(rs.getInt("id"));
                 slotTemplate.setDayOfWeek(rs.getString("dayOfWeek"));
-                slotTemplate.setStartTime(rs.getDate("startTime"));
-                slotTemplate.setEndTime(rs.getDate("endTime"));
+                slotTemplate.setStartTime(rs.getTime("startTime"));
+                slotTemplate.setEndTime(rs.getTime("endTime"));
                 slotTemplate.setMaxEmployee(rs.getInt("maxEmployee"));
                 slotTemplates.add(slotTemplate);
             }
@@ -61,8 +90,8 @@ public class SlotTemplateDAO extends DAO {
         try {
             PreparedStatement ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
             ps.setString(1, slotTemplate.getDayOfWeek());
-            ps.setDate(2, new java.sql.Date(slotTemplate.getStartTime().getTime()));
-            ps.setDate(3, new java.sql.Date(slotTemplate.getEndTime().getTime()));
+            ps.setTime(2, slotTemplate.getStartTime());
+            ps.setTime(3, slotTemplate.getEndTime());
             ps.setInt(4, slotTemplate.getMaxEmployee());
             
             int affectedRows = ps.executeUpdate();
@@ -87,8 +116,8 @@ public class SlotTemplateDAO extends DAO {
         try {
             PreparedStatement ps = connection.prepareStatement(sql);
             ps.setString(1, slotTemplate.getDayOfWeek());
-            ps.setDate(2, new java.sql.Date(slotTemplate.getStartTime().getTime()));
-            ps.setDate(3, new java.sql.Date(slotTemplate.getEndTime().getTime()));
+            ps.setTime(2, slotTemplate.getStartTime());
+            ps.setTime(3, slotTemplate.getEndTime());
             ps.setInt(4, slotTemplate.getMaxEmployee());
             ps.setInt(5, slotTemplate.getId());
             

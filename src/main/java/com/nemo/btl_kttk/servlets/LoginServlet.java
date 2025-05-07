@@ -24,10 +24,9 @@ public class LoginServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         HttpSession session = request.getSession(false);
         if (session != null && session.getAttribute("user") != null) {
-            // User already logged in, redirect to home page or dashboard
-            response.sendRedirect("gdChinhNV.jsp");
+            User user = (User) session.getAttribute("user");
+            redirectBasedOnRole(response, user);
         } else {
-            // Forward to login page
             request.getRequestDispatcher("gdDangnhap.jsp").forward(request, response);
         }
     }
@@ -37,33 +36,46 @@ public class LoginServlet extends HttpServlet {
         String username = request.getParameter("txtUsername");
         String password = request.getParameter("txtPassword");
         
-        // Validate input
+        
         if (username == null || password == null || username.trim().isEmpty() || password.trim().isEmpty()) {
             request.setAttribute("errorMessage", "Username and password are required");
             request.getRequestDispatcher("gdDangnhap.jsp").forward(request, response);
             return;
         }
         
-        // Check login credentials
         User user = userDAO.checkLogin(username, password);
         
         if (user != null) {
-            // Login successful, create session
             HttpSession session = request.getSession();
             session.setAttribute("user", user);
-            
-            // Redirect based on user role
-            if ("ADMIN".equals(user.getRole())) {
-                response.sendRedirect("admin/dashboard.jsp");
-            } else if ("MANAGER".equals(user.getRole())) {
-                response.sendRedirect("gdChinhNV.jsp");
-            } else {
-                response.sendRedirect("gdChinhNV.jsp");
-            }
+            redirectBasedOnRole(response, user);
         } else {
             // Login failed
             request.setAttribute("errorMessage", "Invalid username or password");
             request.getRequestDispatcher("gdDangnhap.jsp").forward(request, response);
+        }
+    }
+    
+    
+    private void redirectBasedOnRole(HttpServletResponse response, User user) throws IOException {
+        if (user == null) {
+            response.sendRedirect("login");
+            return;
+        }
+        
+        switch (user.getRole()) {
+            case "ADMIN":
+                response.sendRedirect("gdChinhQL.jsp");
+                break;
+            case "MANAGER":
+                response.sendRedirect("gdChinhQL.jsp");
+                break;
+            case "EMPLOYEE":
+                response.sendRedirect("gdChinhNV.jsp");
+                break;
+            default:
+                response.sendRedirect("gdChinhNV.jsp");
+                break;
         }
     }
 } 

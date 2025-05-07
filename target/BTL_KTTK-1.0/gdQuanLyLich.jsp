@@ -1,11 +1,12 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<%@ page import="com.nemo.btl_kttk.models.User" %>
+<%@ page import="com.nemo.btl_kttk.models.*" %>
+<%@ page import="java.util.*" %>
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trang chính nhân viên</title>
+    <title>Quản lý lịch</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -50,6 +51,7 @@
             padding: 8px 16px;
             border-radius: 4px;
             cursor: pointer;
+            text-decoration: none;
         }
         
         .content {
@@ -89,6 +91,22 @@
         .function-btn:hover {
             background-color: #4c6ca0;
         }
+        
+        .back-button {
+            background-color: #757575;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            margin-top: 20px;
+        }
+        
+        .back-button:hover {
+            background-color: #616161;
+        }
     </style>
 </head>
 <body>
@@ -97,6 +115,12 @@
         User user = (User) session.getAttribute("user");
         if (user == null) {
             response.sendRedirect("login");
+            return;
+        }
+        
+        // Kiểm tra quyền
+        if (!"MANAGER".equals(user.getRole()) && !"ADMIN".equals(user.getRole())) {
+            response.sendRedirect("home");
             return;
         }
     %>
@@ -109,11 +133,28 @@
     </div>
     
     <div class="container">
+        <% if(request.getAttribute("successMessage") != null) { %>
+            <div class="message success">
+                <%= request.getAttribute("successMessage") %>
+            </div>
+        <% } %>
+        
+        <% if(request.getAttribute("errorMessage") != null) { %>
+            <div class="message error">
+                <%= request.getAttribute("errorMessage") %>
+            </div>
+        <% } %>
+        
         <div class="content">
-            <div class="title">Các chức năng của nhân viên</div>
+            <div class="title">Quản lý lịch</div>
             
             <div class="functions">
-                <a href="shift-register" class="function-btn" id="btnDangKyLich">Đăng ký lịch</a>
+                <a href="publish-schedule" class="function-btn" id="btnTaoLich">Tạo lịch</a>
+                <a href="template-list" class="function-btn" id="btnTaoTemplate">Tạo Template</a>
+            </div>
+            
+            <div style="text-align: center; margin-top: 20px;">
+                <a href="gdChinhQL.jsp" class="back-button">Quay lại</a>
             </div>
         </div>
     </div>

@@ -50,14 +50,14 @@ public class ShiftRegisterServlet extends HttpServlet {
         
         // Xử lý yêu cầu xem chi tiết ca làm
         if (path.contains("shiftSlotDetail")) {
-            handleTimeRecordView(request, response, user);
+            handleShiftSlotDetail(request, response, user);
         } else {
             // Xử lý yêu cầu xem danh sách ca làm
             handleShiftListView(request, response, user);
         }
     }
     
-    private void handleTimeRecordView(HttpServletRequest request, HttpServletResponse response, User user) throws ServletException, IOException {
+    private void handleShiftSlotDetail(HttpServletRequest request, HttpServletResponse response, User user) throws ServletException, IOException {
         // Lấy id của ShiftSlot từ url
         String idParam = request.getParameter("id");
         if (idParam != null && !idParam.isEmpty()) {
@@ -137,15 +137,6 @@ public class ShiftRegisterServlet extends HttpServlet {
         
         User user = (User) session.getAttribute("user");
         String action = request.getParameter("action");
-        String uri = request.getRequestURI();
-        String contextPath = request.getContextPath();
-        String path = uri.substring(contextPath.length());
-        
-        // Xử lý yêu cầu xem chi tiết ca làm
-        if (path.contains("shiftSlotDetail")) {
-            handleTimeRecordSubmit(request, response, user);
-            return;
-        }
         
         // Xử lý yêu cầu đăng ký/hủy đăng ký ca làm
         if ("register".equals(action)) {
@@ -154,100 +145,7 @@ public class ShiftRegisterServlet extends HttpServlet {
             handleCancelShift(request, response, user);
         }
         
-        // Instead of redirecting, forward to maintain request attributes
         handleShiftListView(request, response, user);
-    }
-    
-    private void handleTimeRecordSubmit(HttpServletRequest request, HttpServletResponse response, User user) throws ServletException, IOException {
-        String action = request.getParameter("action");
-        
-        if ("record".equals(action)) {
-            String shiftIdParam = request.getParameter("txtId");
-            String startTimeParam = request.getParameter("txtStartTime");
-            String endTimeParam = request.getParameter("txtEndTime");
-            
-            if (shiftIdParam != null && !shiftIdParam.isEmpty() && 
-                startTimeParam != null && !startTimeParam.isEmpty() && 
-                endTimeParam != null && !endTimeParam.isEmpty()) {
-                
-                try {
-                    int shiftId = Integer.parseInt(shiftIdParam);
-                    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm");
-                    Date startTime = dateFormat.parse(startTimeParam);
-                    Date endTime = dateFormat.parse(endTimeParam);
-                    
-                    ShiftSlot shiftSlot = shiftSlotDAO.getShiftSlotById(shiftId);
-                    
-                    if (shiftSlot != null) {
-                        // Check if user is registered for this shift
-                        List<EmployeeShift> employeeShifts = employeeShiftDAO.getEmployeeShiftsByUserId(user.getId());
-                        EmployeeShift userShift = null;
-                        
-                        for (EmployeeShift shift : employeeShifts) {
-                            if (shift.getShiftSlot().getId() == shiftId) {
-                                userShift = shift;
-                                break;
-                            }
-                        }
-                        
-                        if (userShift != null) {
-                            // User is registered for this shift, create a time record
-                            TimeRecord timeRecord = new TimeRecord();
-                            timeRecord.setEmployeeShift(userShift);
-                            
-                            // Convert Date to LocalDateTime
-                            LocalDateTime startLDT = startTime.toInstant()
-                                .atZone(ZoneId.systemDefault())
-                                .toLocalDateTime();
-                            
-                            LocalDateTime endLDT = endTime.toInstant()
-                                .atZone(ZoneId.systemDefault())
-                                .toLocalDateTime();
-                            
-                            timeRecord.setActualStartTime(startLDT);
-                            timeRecord.setActualEndTime(endLDT);
-                            
-                            // Save the time record
-                            boolean success = timeRecordDAO.addTimeRecord(timeRecord);
-                            
-                            if (success) {
-                                request.setAttribute("successMessage", "Thời gian làm việc đã được ghi nhận thành công");
-                            } else {
-                                request.setAttribute("errorMessage", "Không thể ghi nhận thời gian làm việc");
-                            }
-                        } else {
-                            // User is not registered for this shift
-                            request.setAttribute("errorMessage", "Bạn chưa đăng ký ca làm việc này");
-                        }
-                        
-                        // Gọi lại hàm xem chi tiết để hiển thị thông tin cập nhật
-                        request.setAttribute("shiftSlot", shiftSlot);
-                        
-                        // Cập nhật lại trạng thái đăng ký
-                        boolean hasRegistered = userShift != null;
-                        request.setAttribute("hasRegistered", hasRegistered);
-                        request.setAttribute("userShift", userShift);
-                        
-                        request.getRequestDispatcher("gdChiTietCaLam.jsp").forward(request, response);
-                    } else {
-                        request.setAttribute("errorMessage", "Không tìm thấy ca làm việc");
-                        response.sendRedirect("shift-register");
-                    }
-                    
-                } catch (NumberFormatException e) {
-                    request.setAttribute("errorMessage", "ID ca làm việc không hợp lệ");
-                    response.sendRedirect("shift-register");
-                } catch (ParseException e) {
-                    request.setAttribute("errorMessage", "Định dạng thời gian không hợp lệ");
-                    response.sendRedirect("shift-register");
-                }
-            } else {
-                request.setAttribute("errorMessage", "Vui lòng cung cấp đầy đủ thông tin");
-                response.sendRedirect("shift-register");
-            }
-        } else {
-            response.sendRedirect("shift-register");
-        }
     }
     
     private void handleRegisterShift(HttpServletRequest request, HttpServletResponse response, User user) {

@@ -1,19 +1,19 @@
 package com.nemo.btl_kttk.models;
 
 import java.io.Serializable;
-import java.util.Date;
+import java.sql.Time;
 
 public class SlotTemplate implements Serializable {
     private int id;
     private String dayOfWeek;
-    private Date startTime;
-    private Date endTime;
+    private Time startTime;
+    private Time endTime;
     private int maxEmployee;
     
     public SlotTemplate() {
     }
     
-    public SlotTemplate(int id, String dayOfWeek, Date startTime, Date endTime, int maxEmployee) {
+    public SlotTemplate(int id, String dayOfWeek, Time startTime, Time endTime, int maxEmployee) {
         this.id = id;
         this.dayOfWeek = dayOfWeek;
         this.startTime = startTime;
@@ -21,7 +21,7 @@ public class SlotTemplate implements Serializable {
         this.maxEmployee = maxEmployee;
     }
 
-    public SlotTemplate(String dayOfWeek, Date startTime, Date endTime, int maxEmployee) {
+    public SlotTemplate(String dayOfWeek, Time startTime, Time endTime, int maxEmployee) {
         this.dayOfWeek = dayOfWeek;
         this.startTime = startTime;
         this.endTime = endTime;
@@ -44,19 +44,19 @@ public class SlotTemplate implements Serializable {
         this.dayOfWeek = dayOfWeek;
     }
 
-    public Date getStartTime() {
+    public Time getStartTime() {
         return startTime;
     }
 
-    public void setStartTime(Date startTime) {
+    public void setStartTime(Time startTime) {
         this.startTime = startTime;
     }
 
-    public Date getEndTime() {
+    public Time getEndTime() {
         return endTime;
     }
 
-    public void setEndTime(Date endTime) {
+    public void setEndTime(Time endTime) {
         this.endTime = endTime;
     }
 

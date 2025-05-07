@@ -28,8 +28,8 @@ CREATE TABLE IF NOT EXISTS WorkSchedule (
 CREATE TABLE IF NOT EXISTS SlotTemplate (
     id INTEGER(10) PRIMARY KEY AUTO_INCREMENT,
     dayOfWeek VARCHAR(255),
-    startTime DATE,
-    endTime DATE,
+    startTime TIME,
+    endTime TIME,
     maxEmployee INTEGER(10)
 );
 
@@ -203,11 +203,11 @@ VALUES
 -- Thêm dữ liệu mẫu vào bảng SlotTemplate
 INSERT INTO SlotTemplate (dayOfWeek, startTime, endTime, maxEmployee)
 VALUES 
-('MONDAY', '2023-01-01 08:00:00', '2023-01-01 12:00:00', 3),
-('MONDAY', '2023-01-01 13:00:00', '2023-01-01 17:00:00', 2),
-('TUESDAY', '2023-01-01 08:00:00', '2023-01-01 12:00:00', 3),
-('TUESDAY', '2023-01-01 13:00:00', '2023-01-01 17:00:00', 2),
-('WEDNESDAY', '2023-01-01 08:00:00', '2023-01-01 17:00:00', 4);
+('MONDAY', '08:00:00', '12:00:00', 3),
+('MONDAY', '13:00:00', '17:00:00', 2),
+('TUESDAY', '08:00:00', '12:00:00', 3),
+('TUESDAY', '13:00:00', '17:00:00', 2),
+('WEDNESDAY', '08:00:00', '17:00:00', 4);
 
 -- Thêm dữ liệu mẫu vào bảng WorkScheduleSlot
 INSERT INTO WorkScheduleSlot (tblWorkScheduleId, tblSlotTemplateId)

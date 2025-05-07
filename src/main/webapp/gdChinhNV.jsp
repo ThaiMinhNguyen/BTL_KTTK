@@ -114,10 +114,6 @@
             
             <div class="functions">
                 <a href="shift-register" class="function-btn" id="btnDangKyLich">Đăng ký lịch</a>
-                <% if ("MANAGER".equals(user.getRole()) || "ADMIN".equals(user.getRole())) { %>
-                    <a href="manage-shifts" class="function-btn">Quản lý ca làm việc</a>
-                    <a href="payment-management" class="function-btn">Quản lý thanh toán</a>
-                <% } %>
             </div>
         </div>
     </div>
