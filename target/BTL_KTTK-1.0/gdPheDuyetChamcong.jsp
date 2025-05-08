@@ -3,6 +3,7 @@
 <%@ page import="java.util.*" %>
 <%@ page import="java.text.SimpleDateFormat" %>
 <%@ page import="java.text.DecimalFormat" %>
+<%@ page import="java.time.format.DateTimeFormatter" %>
 <!DOCTYPE html>
 <html>
 <head>
@@ -97,6 +98,7 @@
         // Format cho số và ngày
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
         SimpleDateFormat dateTimeFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
+        DateTimeFormatter localDateTimeFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
         DecimalFormat hourFormat = new DecimalFormat("#,##0.00");
         DecimalFormat moneyFormat = new DecimalFormat("#,##0");
     %>
@@ -139,8 +141,8 @@
                     <% for(TimeRecord record : timeRecords) { %>
                         <tr>
                             <td><%= record.getId() %></td>
-                            <td><%= dateTimeFormat.format(record.getActualStartTime()) %></td>
-                            <td><%= dateTimeFormat.format(record.getActualEndTime()) %></td>
+                            <td><%= record.getActualStartTime() != null ? record.getActualStartTime().format(localDateTimeFormatter) : "" %></td>
+                            <td><%= record.getActualEndTime() != null ? record.getActualEndTime().format(localDateTimeFormatter) : "" %></td>
                         </tr>
                     <% } %>
                 <% } %>
@@ -155,10 +157,7 @@
         <% } else { %>
             <form action="process-payment" method="POST">
                 <input type="hidden" name="action" value="approve_payment">
-                <input type="hidden" name="employeeId" value="<%= employee != null ? employee.getId() : "" %>">
-                <input type="hidden" name="weekStartDate" value="<%= weekStartDate != null ? dateFormat.format(weekStartDate) : "" %>">
-                <input type="hidden" name="totalHours" value="<%= totalHours != null ? totalHours : "0" %>">
-                <input type="hidden" name="amount" value="<%= amount != null ? amount : "0" %>">
+                <input type="hidden" name="paymentId" value="<%= payment != null ? payment.getId() : "" %>">
                 
                 <button type="submit" class="approval-button">Phê duyệt</button>
             </form>

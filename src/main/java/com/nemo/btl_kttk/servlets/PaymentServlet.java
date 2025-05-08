@@ -41,7 +41,7 @@ public class PaymentServlet extends HttpServlet {
 
         switch (servletPath) {
             case "/payment-management":
-                showTimekeepingManagement(request, response);
+                showPaymentManagement(request, response);
                 break;
             case "/process-payment":
                 showApprovalPage(request, response);
@@ -71,16 +71,16 @@ public class PaymentServlet extends HttpServlet {
         }
     }
 
-    private void showTimekeepingManagement(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    private void showPaymentManagement(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         HttpSession session = request.getSession();
         User user = (User) session.getAttribute("user");
 
-        if (user == null) {
+        if (user == null || "EMPLOYEE".equals(user.getRole())) {
             response.sendRedirect("gdDangnhap.jsp");
             return;
         }
 
-        // Get date from request or use current date
+        // lấy date từ request hoặc date hiện tại
         String weekStartDateStr = request.getParameter("weekStartDate");
         Date weekStartDate;
 
@@ -89,23 +89,22 @@ public class PaymentServlet extends HttpServlet {
                 SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
                 weekStartDate = dateFormat.parse(weekStartDateStr);
             } catch (ParseException e) {
-                weekStartDate = new Date(); // Use current date if parsing fails
+                weekStartDate = new Date();
             }
         } else {
             weekStartDate = new Date();
         }
 
-        // Adjust to the Monday of current week if needed
+        // Chỉnh về ngày đầu tuần
         weekStartDate = adjustToMondayOfWeek(weekStartDate);
 
-        // Get all payments for the selected week
+        //lấy tất cả payment của tuần
         List<Payment> payments = paymentDAO.getPaymentsByWeek(weekStartDate);
 
-        // Set attributes for the JSP
         request.setAttribute("weekStartDate", weekStartDate);
         request.setAttribute("payments", payments);
 
-        // Forward to JSP
+        
         request.getRequestDispatcher("gdQuanlyChamcong.jsp").forward(request, response);
     }
 
@@ -113,57 +112,42 @@ public class PaymentServlet extends HttpServlet {
         HttpSession session = request.getSession();
         User user = (User) session.getAttribute("user");
 
-        if (user == null) {
+        if (user == null || "EMPLOYEE".equals(user.getRole())) {
             response.sendRedirect("gdDangnhap.jsp");
             return;
         }
+         
+        String paymentIdStr = request.getParameter("paymentId");
 
-        // Get employee from request
-        String employeeIdStr = request.getParameter("employeeId");
-        String weekStartDateStr = request.getParameter("weekStartDate");
-
-        if (employeeIdStr != null && weekStartDateStr != null) {
+        if (paymentIdStr != null) {
             try {
-                int employeeId = Integer.parseInt(employeeIdStr);
-                SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-                Date weekStartDate = dateFormat.parse(weekStartDateStr);
+                int paymentId = Integer.parseInt(paymentIdStr);
 
-                // Get user
-                User employee = userDAO.getUserById(employeeId);
-
-                // Get time records for the employee for the selected week
-                List<TimeRecord> timeRecords = timeRecordDAO.getTimeRecordsByUser(employeeId, weekStartDate);
-
-                // Calculate total hours and amount
-                double totalHours = 0;
-                double amount = 0;
-
+                //lấy payment
+                Payment payment = paymentDAO.getPaymentById(paymentId);
                 
-
-                // Check if payment already exists
-                Payment existingPayment = paymentDAO.getUserPaymentByWeek(employeeId, weekStartDate);
-                if (existingPayment != null) {
-                    totalHours = existingPayment.getTotalHour();
-                    amount = existingPayment.getAmount();
-                    request.setAttribute("payment", existingPayment);
+                if (payment != null) {
+                    
+                    User employee = payment.getEmployee();
+                    
+                    Date weekStartDate = payment.getWeekStartDate();
+                    
+                    List<TimeRecord> timeRecords = timeRecordDAO.getTimeRecordsByPaymentId(paymentId);
+                    
+                    request.setAttribute("employee", employee);
+                    request.setAttribute("weekStartDate", weekStartDate);
+                    request.setAttribute("timeRecords", timeRecords);
+                    request.setAttribute("totalHours", payment.getTotalHour());
+                    request.setAttribute("amount", payment.getAmount());
+                    request.setAttribute("payment", payment);
+                    
+                    request.getRequestDispatcher("gdPheDuyetChamcong.jsp").forward(request, response);
+                    return;
                 }
-                
-                // Set attributes for the JSP
-                request.setAttribute("employee", employee);
-                request.setAttribute("weekStartDate", weekStartDate);
-                request.setAttribute("timeRecords", timeRecords);
-                request.setAttribute("totalHours", totalHours);
-                request.setAttribute("amount", amount);
-                
-                // Forward to JSP
-                request.getRequestDispatcher("gdPheDuyetChamcong.jsp").forward(request, response);
-                return;
-            } catch (NumberFormatException | ParseException e) {
-                // Do nothing, will redirect to timekeeping management
+            } catch (NumberFormatException e) {
             }
         }
 
-        // Redirect back if parameters are missing or invalid
         response.sendRedirect("payment-management");
     }
 
@@ -171,46 +155,24 @@ public class PaymentServlet extends HttpServlet {
         HttpSession session = request.getSession();
         User user = (User) session.getAttribute("user");
 
-        if (user == null) {
+        if (user == null || "EMPLOYEE".equals(user.getRole())) {
             response.sendRedirect("gdDangnhap.jsp");
             return;
         }
 
-        // Get parameters
-        String employeeIdStr = request.getParameter("employeeId");
-        String weekStartDateStr = request.getParameter("weekStartDate");
-        String totalHoursStr = request.getParameter("totalHours");
-        String amountStr = request.getParameter("amount");
+        //Lấy paymentId
+        String paymentIdStr = request.getParameter("paymentId");
 
         try {
-            int employeeId = Integer.parseInt(employeeIdStr);
-            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-            Date weekStartDate = dateFormat.parse(weekStartDateStr);
-            double totalHours = Double.parseDouble(totalHoursStr);
-            double amount = Double.parseDouble(amountStr);
-
-            // Get employee
-            User employee = userDAO.getUserById(employeeId);
-
-            // Check if payment already exists
-            Payment existingPayment = paymentDAO.getUserPaymentByWeek(employeeId, weekStartDate);
-
-            boolean success;
-            if (existingPayment != null) {
-                //Set status thành PAID
-                success = paymentDAO.processPayment(existingPayment.getId(), user.getId(), new Date());
-            } else {
-                // Create new payment
-                Payment payment = new Payment();
-                payment.setEmployee(employee);
-                payment.setWeekStartDate(weekStartDate);
-                payment.setPaymentDate(new Date());
-                payment.setTotalHour(totalHours);
-                payment.setAmount(amount);
-                payment.setStatus("PAID");
-                payment.setProcessedBy(user);
-
-                success = paymentDAO.createPayment(payment);
+            int paymentId = Integer.parseInt(paymentIdStr);
+            
+            //Lấy payment
+            Payment payment = paymentDAO.getPaymentById(paymentId);
+            
+            boolean success = false;
+            if (payment != null) {
+                //chuyển status thành PAID
+                success = paymentDAO.processPayment(paymentId, user.getId(), new Date());
             }
 
             if (success) {
@@ -219,28 +181,22 @@ public class PaymentServlet extends HttpServlet {
                 request.setAttribute("errorMessage", "Có lỗi xảy ra khi phê duyệt thanh toán.");
             }
 
-        } catch (NumberFormatException | ParseException e) {
+        } catch (NumberFormatException e) {
             request.setAttribute("errorMessage", "Dữ liệu không hợp lệ.");
         }
 
-        // Redirect back to timekeeping management
-        showTimekeepingManagement(request, response);
+        showPaymentManagement(request, response);
     }
 
-    /**
-     * Adjust a date to the Monday of its week
-     *
-     * @param date The date to adjust
-     * @return The Monday of the week
-     */
+    //Hàm chuyển ngày trong tuần thành ngày đầu tuần
     private Date adjustToMondayOfWeek(Date date) {
         java.util.Calendar calendar = java.util.Calendar.getInstance();
         calendar.setTime(date);
 
-        // Get day of week (in Java Calendar: 1=Sunday, 2=Monday, ..., 7=Saturday)
+        // lấy ngày trong tuần (trong Calendar: 1=Sunday, 2=Monday, ..., 7=Saturday)
         int dayOfWeek = calendar.get(java.util.Calendar.DAY_OF_WEEK);
 
-        // Calculate days to subtract to get to Monday
+        //Trừ đi để chuyển về ngày đầu tuần
         int daysToSubtract;
         if (dayOfWeek == java.util.Calendar.SUNDAY) { // Sunday
             daysToSubtract = 6; // Subtract 6 days to get to previous Monday
@@ -248,7 +204,7 @@ public class PaymentServlet extends HttpServlet {
             daysToSubtract = dayOfWeek - java.util.Calendar.MONDAY; // Subtract to get to Monday of same week
         }
 
-        // Adjust date to Monday
+        //chuyển thành ngày đầu tuần
         calendar.add(java.util.Calendar.DAY_OF_MONTH, -daysToSubtract);
 
         return calendar.getTime();

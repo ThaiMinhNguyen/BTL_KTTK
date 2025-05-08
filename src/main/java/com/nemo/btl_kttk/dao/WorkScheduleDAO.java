@@ -2,7 +2,6 @@ package com.nemo.btl_kttk.dao;
 
 import com.nemo.btl_kttk.models.User;
 import com.nemo.btl_kttk.models.WorkSchedule;
-import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -44,11 +43,7 @@ public class WorkScheduleDAO extends DAO {
         return null;
     }
     
-    /**
-     * Lấy tất cả lịch làm việc
-     * 
-     * @return Danh sách các lịch làm việc
-     */
+    
     public List<WorkSchedule> getAllWorkSchedules() {
         List<WorkSchedule> workSchedules = new ArrayList<>();
         String sql = "SELECT * FROM WorkSchedule ORDER BY createDate DESC";
@@ -97,7 +92,6 @@ public class WorkScheduleDAO extends DAO {
         }
         return -1;
     }
-    
     
     public boolean deleteWorkSchedule(int scheduleId) {
         String sql = "DELETE FROM WorkSchedule WHERE id = ?";

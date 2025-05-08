@@ -9,7 +9,6 @@ import com.nemo.btl_kttk.models.SlotTemplate;
 import com.nemo.btl_kttk.models.User;
 import com.nemo.btl_kttk.models.WorkSchedule;
 import java.io.IOException;
-import java.sql.SQLException;
 import java.sql.Time;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -45,15 +44,19 @@ public class ScheduleManagementServlet extends HttpServlet {
         String servletPath = request.getServletPath();
         
         switch (servletPath) {
+            //quản lý lịch
             case "/schedule-management":
                 showScheduleManagement(request, response);
                 break;
+            //trang tạo lịch
             case "/publish-schedule":
                 showPublishSchedule(request, response);
                 break;
+            //trang ds template
             case "/template-list":
                 showTemplateList(request, response);
                 break;
+            //trang tạo template mới
             case "/create-template":
                 showCreateTemplate(request, response);
                 break;
@@ -70,17 +73,10 @@ public class ScheduleManagementServlet extends HttpServlet {
         if (action == null) {
             response.sendRedirect("gdChinhQL.jsp");
             return;
-        }
-        
+        }     
         switch (action) {
-            case "create_schedule":
-                createSchedule(request, response);
-                break;
             case "publish_schedule":
                 publishSchedule(request, response);
-                break;
-            case "delete_schedule":
-                deleteSchedule(request, response);
                 break;
             case "create_template":
                 createNewTemplate(request, response);
@@ -126,60 +122,7 @@ public class ScheduleManagementServlet extends HttpServlet {
         request.getRequestDispatcher("gdPublishSchedule.jsp").forward(request, response);
     }
     
-    private void createSchedule(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        String name = request.getParameter("templateName");
-        String[] selectedTemplates = request.getParameterValues("selectedTemplates");
-        
-        HttpSession session = request.getSession();
-        User user = (User) session.getAttribute("user");
-        
-        if (user == null) {
-            request.setAttribute("errorMessage", "Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.");
-            request.getRequestDispatcher("gdDangnhap.jsp").forward(request, response);
-            return;
-        }
-        
-        if (name == null || name.trim().isEmpty() || selectedTemplates == null || selectedTemplates.length == 0) {
-            request.setAttribute("errorMessage", "Vui lòng nhập tên lịch và chọn ít nhất một mẫu ca.");
-            showPublishSchedule(request, response);
-            return;
-        }
-        
-        // Tạo WorkSchedule mới
-        int workScheduleId = workScheduleDAO.createWorkSchedule(name, user.getId());
-        
-        if (workScheduleId == -1) {
-            request.setAttribute("errorMessage", "Không thể tạo lịch làm việc. Vui lòng thử lại.");
-            showPublishSchedule(request, response);
-            return;
-        }
-        
-        // Thêm các SlotTemplate vào WorkSchedule
-        boolean success = true;
-        for (String templateId : selectedTemplates) {
-            try {
-                int id = Integer.parseInt(templateId);
-                if (!workScheduleSlotDAO.addSlotTemplateToWorkSchedule(workScheduleId, id)) {
-                    success = false;
-                    break;
-                }
-            } catch (NumberFormatException e) {
-                success = false;
-                break;
-            }
-        }
-        
-        if (!success) {
-            workScheduleDAO.deleteWorkSchedule(workScheduleId);
-            request.setAttribute("errorMessage", "Không thể thêm các mẫu ca vào lịch làm việc. Vui lòng thử lại.");
-            showPublishSchedule(request, response);
-            return;
-        }
-        
-        request.setAttribute("successMessage", "Tạo lịch làm việc thành công!");
-        showPublishSchedule(request, response);
-    }
-    
+  
     private void publishSchedule(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String scheduleIdStr = request.getParameter("scheduleId");
         String weekStartDateStr = request.getParameter("weekStartDate");
@@ -253,42 +196,7 @@ public class ScheduleManagementServlet extends HttpServlet {
             showPublishSchedule(request, response);
         }
     }
-    
-    private void deleteSchedule(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        String scheduleIdStr = request.getParameter("scheduleId");
         
-        if (scheduleIdStr == null) {
-            request.setAttribute("errorMessage", "Không tìm thấy ID lịch làm việc.");
-            showScheduleManagement(request, response);
-            return;
-        }
-        
-        try {
-            int scheduleId = Integer.parseInt(scheduleIdStr);
-            boolean deleted = workScheduleDAO.deleteWorkSchedule(scheduleId);
-            
-            if (deleted) {
-                request.setAttribute("successMessage", "Đã xóa lịch làm việc thành công!");
-            } else {
-                request.setAttribute("errorMessage", "Không thể xóa lịch làm việc. Vui lòng thử lại.");
-            }
-            
-            showScheduleManagement(request, response);
-            
-        } catch (NumberFormatException e) {
-            request.setAttribute("errorMessage", "ID lịch làm việc không hợp lệ.");
-            showScheduleManagement(request, response);
-        }
-    }
-    
-    /**
-     * Tạo danh sách các ShiftSlot từ các SlotTemplate và ngày bắt đầu tuần
-     * 
-     * @param templates Danh sách các mẫu ca
-     * @param weekStartDate Ngày bắt đầu tuần
-     * @param createdBy Người tạo
-     * @return Danh sách các ca làm việc
-     */
     private List<ShiftSlot> createShiftSlotsFromTemplates(List<SlotTemplate> templates, Date weekStartDate, User createdBy) {
         List<ShiftSlot> shiftSlots = new ArrayList<>();
         
@@ -338,12 +246,7 @@ public class ScheduleManagementServlet extends HttpServlet {
         return shiftSlots;
     }
     
-    /**
-     * Chuyển đổi tên ngày trong tuần thành số (thứ 2 = 1, thứ 3 = 2, ...)
-     * 
-     * @param dayOfWeek Tên ngày trong tuần (Thứ 2, Thứ 3, ...)
-     * @return Số tương ứng hoặc -1 nếu không tìm thấy
-     */
+    
     private int getDayOfWeekAsInt(String dayOfWeek) {
         switch (dayOfWeek.trim().toLowerCase()) {
             case "thứ 2": 
@@ -371,9 +274,7 @@ public class ScheduleManagementServlet extends HttpServlet {
         }
     }
     
-    /**
-     * Hiển thị danh sách các templates có sẵn
-     */
+    
     private void showTemplateList(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         List<SlotTemplate> templates = slotTemplateDAO.getAllTemplates();
         request.setAttribute("templates", templates);
@@ -442,16 +343,12 @@ public class ScheduleManagementServlet extends HttpServlet {
         request.getRequestDispatcher("gdDanhSachTemplate.jsp").forward(request, response);
     }
     
-    /**
-     * Hiển thị trang tạo template mới
-     */
+    
     private void showCreateTemplate(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         request.getRequestDispatcher("gdTaoTemplate.jsp").forward(request, response);
     }
     
-    /**
-     * Xử lý việc tạo template mới
-     */
+    //Xử lý việc tạo template mới
     private void createNewTemplate(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String dayOfWeek = request.getParameter("dayOfWeek");
         String startTimeStr = request.getParameter("startTime");
@@ -478,7 +375,7 @@ public class ScheduleManagementServlet extends HttpServlet {
             
             // Tạo SlotTemplate mới
             SlotTemplate template = new SlotTemplate();
-            template.setDayOfWeek(dayOfWeek); // Lưu ngày trong tuần bằng tiếng Anh
+            template.setDayOfWeek(dayOfWeek);
             template.setStartTime(startTime);
             template.setEndTime(endTime);
             template.setMaxEmployee(maxEmployee);
@@ -500,9 +397,7 @@ public class ScheduleManagementServlet extends HttpServlet {
         }
     }
     
-    /**
-     * Tạo lịch làm việc từ danh sách template đã chọn
-     */
+    //Tạo workSchedule từ SlotTemplate đã chọn
     private void createScheduleFromTemplates(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String scheduleName = request.getParameter("scheduleName");
         
@@ -515,7 +410,7 @@ public class ScheduleManagementServlet extends HttpServlet {
             return;
         }
         
-        @SuppressWarnings("unchecked")
+        @SuppressWarnings("unchecked")//bỏ qua cảnh báo khi cast dữ liệu từ object
         List<Integer> selectedTemplateIds = (List<Integer>) session.getAttribute("selectedTemplateIds");
         
         if (scheduleName == null || scheduleName.trim().isEmpty() || selectedTemplateIds == null || selectedTemplateIds.isEmpty()) {

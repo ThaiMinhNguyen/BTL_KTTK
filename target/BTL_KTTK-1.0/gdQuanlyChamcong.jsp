@@ -259,7 +259,7 @@
                                     <% } %>
                                 </td>
                                 <td>
-                                    <a href="process-payment?employeeId=<%= payment.getEmployee().getId() %>&weekStartDate=<%= dateFormat.format(payment.getWeekStartDate()) %>" 
+                                    <a href="process-payment?paymentId=<%= payment.getId() %>" 
                                        class="choose-link">Choose</a>
                                 </td>
                             </tr>

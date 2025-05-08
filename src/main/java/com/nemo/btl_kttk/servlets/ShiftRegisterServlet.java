@@ -116,11 +116,11 @@ public class ShiftRegisterServlet extends HttpServlet {
             weekStartDate = new Date(); 
         }
         
-        // Get available shifts for the selected week
+        // lấy available shiftslot cho ngày vừa chọn
         List<ShiftSlot> availableShifts = shiftSlotDAO.getAvailableShifts(weekStartDate);
         request.setAttribute("shiftSlots", availableShifts);
         
-        // Get employee's registered shifts
+        // lấy ca làm đã đăng ký của user
         List<EmployeeShift> employeeShifts = employeeShiftDAO.getEmployeeShiftsByUserId(user.getId());
         request.setAttribute("employeeShifts", employeeShifts);
         
@@ -144,7 +144,7 @@ public class ShiftRegisterServlet extends HttpServlet {
         } else if ("cancel".equals(action)) {
             handleCancelShift(request, response, user);
         }
-        
+        //gọi lại để cập nhật thay đổi
         handleShiftListView(request, response, user);
     }
     

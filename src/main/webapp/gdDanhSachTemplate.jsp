@@ -200,16 +200,9 @@
 </head>
 <body>
     <%
-        // Kiểm tra đăng nhập
-        User user = (User) session.getAttribute("user");
-        if (user == null) {
+         User user = (User) session.getAttribute("user");
+        if (user == null || "EMPLOYEE".equals(user.getRole())) {
             response.sendRedirect("login");
-            return;
-        }
-        
-        // Kiểm tra quyền
-        if (!"MANAGER".equals(user.getRole()) && !"ADMIN".equals(user.getRole())) {
-            response.sendRedirect("home");
             return;
         }
         

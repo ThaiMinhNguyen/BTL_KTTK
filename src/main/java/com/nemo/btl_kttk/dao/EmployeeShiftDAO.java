@@ -35,11 +35,9 @@ public class EmployeeShiftDAO extends DAO {
                 employeeShift.setId(rs.getInt("id"));
                 employeeShift.setRegistrationDate(rs.getTimestamp("registrationDate").toLocalDateTime());
                 
-                // load employee
                 User employee = userDAO.getUserById(rs.getInt("tblUserId"));
                 employeeShift.setEmployee(employee);
                 
-                // load shift slot
                 ShiftSlot shiftSlot = shiftSlotDAO.getShiftSlotById(rs.getInt("tblShiftSlotId"));
                 employeeShift.setShiftSlot(shiftSlot);
                 
@@ -62,11 +60,9 @@ public class EmployeeShiftDAO extends DAO {
                 employeeShift.setId(rs.getInt("id"));
                 employeeShift.setRegistrationDate(rs.getTimestamp("registrationDate").toLocalDateTime());
                 
-                // load employee
                 User employee = userDAO.getUserById(rs.getInt("tblUserId"));
                 employeeShift.setEmployee(employee);
                 
-                // load shift slot
                 ShiftSlot shiftSlot = shiftSlotDAO.getShiftSlotById(rs.getInt("tblShiftSlotId"));
                 employeeShift.setShiftSlot(shiftSlot);
                 
@@ -79,13 +75,13 @@ public class EmployeeShiftDAO extends DAO {
     }
     
     public boolean registerShift(int userId, int shiftId) {
-        // Check if shift is available
+        // kiểm tra xem shift có available khôgn
         ShiftSlotDAO ssDAO = new ShiftSlotDAO();
         if (!ssDAO.isShiftAvailable(shiftId)) {
             return false;
         }
         
-        // Check if user has already registered for this shift
+        // kiểm tra xem user đã đăng ký chưa
         String checkSql = "SELECT COUNT(*) FROM EmployeeShift WHERE tblUserId = ? AND tblShiftSlotId = ?";
         try {
             PreparedStatement checkPs = connection.prepareStatement(checkSql);
@@ -93,14 +89,14 @@ public class EmployeeShiftDAO extends DAO {
             checkPs.setInt(2, shiftId);
             ResultSet rs = checkPs.executeQuery();
             if (rs.next() && rs.getInt(1) > 0) {
-                return false;  // Already registered
+                return false;
             }
         } catch (SQLException e) {
             e.printStackTrace();
             return false;
         }
         
-        // Register for the shift
+        // đăng ký shift
         String sql = "INSERT INTO EmployeeShift (registrationDate, tblShiftSlotId, tblUserId) VALUES (?, ?, ?)";
         try {
             PreparedStatement ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);

@@ -50,7 +50,6 @@ public class LoginServlet extends HttpServlet {
             session.setAttribute("user", user);
             redirectBasedOnRole(response, user);
         } else {
-            // Login failed
             request.setAttribute("errorMessage", "Invalid username or password");
             request.getRequestDispatcher("gdDangnhap.jsp").forward(request, response);
         }

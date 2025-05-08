@@ -204,6 +204,7 @@
         }
     </style>
     <script>
+        //Tự động submit form khi chọn schedule để hiện thông tin 
         function loadWorkScheduleDetails() {
             document.getElementById("loadScheduleForm").submit();
         }
@@ -211,16 +212,9 @@
 </head>
 <body>
     <%
-        // Kiểm tra đăng nhập
         User user = (User) session.getAttribute("user");
-        if (user == null) {
+        if (user == null || "EMPLOYEE".equals(user.getRole())) {
             response.sendRedirect("login");
-            return;
-        }
-        
-        // Kiểm tra quyền
-        if (!"MANAGER".equals(user.getRole()) && !"ADMIN".equals(user.getRole())) {
-            response.sendRedirect("home");
             return;
         }
         
@@ -337,7 +331,7 @@
                         </div>
                         
                         <div class="submit-row">
-                            <button type="submit" class="button publish-button">Tạo và Công bố lịch</button>
+                            <button type="submit" class="button publish-button">Tạo lịch làm việc</button>
                         </div>
                     </form>
                 </div>

@@ -35,11 +35,9 @@ public class PaymentDAO extends DAO {
                 payment.setAmount(rs.getDouble("amount"));
                 payment.setStatus(rs.getString("status"));
                 
-                // Load employee
                 User employee = userDAO.getUserById(rs.getInt("tblEmployeeId"));
                 payment.setEmployee(employee);
                 
-                // Load processed by
                 User processedBy = userDAO.getUserById(rs.getInt("tblProcessedById"));
                 payment.setProcessedBy(processedBy);
                 
@@ -52,25 +50,6 @@ public class PaymentDAO extends DAO {
         return null;
     }
     
-    private List<TimeRecord> getTimeRecordsForPayment(int paymentId) {
-        List<TimeRecord> timeRecords = new ArrayList<>();
-        String sql = "SELECT id FROM TimeRecord WHERE tblPaymentId = ?";
-        try {
-            PreparedStatement ps = connection.prepareStatement(sql);
-            ps.setInt(1, paymentId);
-            ResultSet rs = ps.executeQuery();
-            TimeRecordDAO timeRecordDAO = new TimeRecordDAO();
-            while (rs.next()) {
-                TimeRecord timeRecord = timeRecordDAO.getTimeRecordById(rs.getInt("id"));
-                if (timeRecord != null) {
-                    timeRecords.add(timeRecord);
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return timeRecords;
-    }
    
     public boolean processPayment(int paymentId, int processedById, Date paymentDate) {
         String sql = "UPDATE Payment SET paymentDate = ?, status = 'PAID', tblProcessedById = ? WHERE id = ?";
@@ -105,11 +84,9 @@ public class PaymentDAO extends DAO {
                 payment.setAmount(rs.getDouble("amount"));
                 payment.setStatus(rs.getString("status"));
                 
-                // Load employee
                 User employee = userDAO.getUserById(rs.getInt("tblEmployeeId"));
                 payment.setEmployee(employee);
                 
-                // Load processed by
                 int processedById = rs.getInt("tblProcessedById");
                 if (!rs.wasNull()) {
                     User processedBy = userDAO.getUserById(processedById);
@@ -124,115 +101,4 @@ public class PaymentDAO extends DAO {
         return payments;
     }
     
-    
-    public Payment getUserPaymentByWeek(int employeeId, java.util.Date weekStartDate) {
-        String sql = "SELECT * FROM Payment WHERE tblEmployeeId = ? AND weekStartDate = ?";
-        try {
-            PreparedStatement ps = connection.prepareStatement(sql);
-            ps.setInt(1, employeeId);
-            ps.setDate(2, new java.sql.Date(weekStartDate.getTime()));
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                Payment payment = new Payment();
-                payment.setId(rs.getInt("id"));
-                payment.setWeekStartDate(rs.getDate("weekStartDate"));
-                payment.setPaymentDate(rs.getDate("paymentDate"));
-                payment.setTotalHour(rs.getDouble("totalHour"));
-                payment.setAmount(rs.getDouble("amount"));
-                payment.setStatus(rs.getString("status"));
-                
-                // Load employee
-                User employee = userDAO.getUserById(employeeId);
-                payment.setEmployee(employee);
-                
-                // Load processed by
-                int processedById = rs.getInt("tblProcessedById");
-                if (!rs.wasNull()) {
-                    User processedBy = userDAO.getUserById(processedById);
-                    payment.setProcessedBy(processedBy);
-                }
-                
-                return payment;
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
-    
-    
-    public boolean createPayment(Payment payment) {
-        String sql = "INSERT INTO Payment (weekStartDate, paymentDate, totalHour, amount, status, tblEmployeeId, tblProcessedById) VALUES (?, ?, ?, ?, ?, ?, ?)";
-        try {
-            PreparedStatement ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
-            ps.setDate(1, new java.sql.Date(payment.getWeekStartDate().getTime()));
-            
-            if (payment.getPaymentDate() != null) {
-                ps.setDate(2, new java.sql.Date(payment.getPaymentDate().getTime()));
-            } else {
-                ps.setNull(2, java.sql.Types.DATE);
-            }
-            
-            ps.setDouble(3, payment.getTotalHour());
-            ps.setDouble(4, payment.getAmount());
-            ps.setString(5, payment.getStatus());
-            ps.setInt(6, payment.getEmployee().getId());
-            
-            if (payment.getProcessedBy() != null) {
-                ps.setInt(7, payment.getProcessedBy().getId());
-            } else {
-                ps.setNull(7, java.sql.Types.INTEGER);
-            }
-            
-            int affectedRows = ps.executeUpdate();
-            
-            if (affectedRows == 0) {
-                return false;
-            }
-            
-            ResultSet generatedKeys = ps.getGeneratedKeys();
-            if (generatedKeys.next()) {
-                payment.setId(generatedKeys.getInt(1));
-            }
-            return true;
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
-        }
-    }
-    
-    
-    public List<Payment> getAllPayments() {
-        List<Payment> payments = new ArrayList<>();
-        String sql = "SELECT * FROM Payment ORDER BY paymentDate DESC";
-        try {
-            Statement stmt = connection.createStatement();
-            ResultSet rs = stmt.executeQuery(sql);
-            while (rs.next()) {
-                Payment payment = new Payment();
-                payment.setId(rs.getInt("id"));
-                payment.setWeekStartDate(rs.getDate("weekStartDate"));
-                payment.setPaymentDate(rs.getDate("paymentDate"));
-                payment.setTotalHour(rs.getDouble("totalHour"));
-                payment.setAmount(rs.getDouble("amount"));
-                payment.setStatus(rs.getString("status"));
-                
-                // Load employee
-                User employee = userDAO.getUserById(rs.getInt("tblEmployeeId"));
-                payment.setEmployee(employee);
-                
-                // Load processed by
-                int processedById = rs.getInt("tblProcessedById");
-                if (!rs.wasNull()) {
-                    User processedBy = userDAO.getUserById(processedById);
-                    payment.setProcessedBy(processedBy);
-                }
-                
-                payments.add(payment);
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return payments;
-    }
 } 
