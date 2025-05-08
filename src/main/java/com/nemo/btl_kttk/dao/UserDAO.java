@@ -64,56 +64,5 @@ public class UserDAO extends DAO {
         }
         return null;
     }
-    
-    public List<User> getAllUsers() {
-        List<User> users = new ArrayList<>();
-        String sql = "SELECT * FROM User";
-        try {
-            Statement stmt = connection.createStatement();
-            ResultSet rs = stmt.executeQuery(sql);
-            while (rs.next()) {
-                User user = new User();
-                user.setId(rs.getInt("id"));
-                user.setUsername(rs.getString("username"));
-                user.setPassword(rs.getString("password"));
-                user.setName(rs.getString("name"));
-                user.setEmail(rs.getString("email"));
-                user.setPhone(rs.getString("phone"));
-                user.setHourlyRate(rs.getDouble("hourlyRate"));
-                user.setRole(rs.getString("role"));
-                user.setActive(rs.getBoolean("active"));
-                users.add(user);
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return users;
-    }
-    
-    public List<User> getAllEmployees() {
-        List<User> users = new ArrayList<>();
-        String sql = "SELECT * FROM User WHERE role = 'EMPLOYEE' AND active = 1";
-        try {
-            Statement stmt = connection.createStatement();
-            ResultSet rs = stmt.executeQuery(sql);
-            while (rs.next()) {
-                User user = new User();
-                user.setId(rs.getInt("id"));
-                user.setUsername(rs.getString("username"));
-                user.setPassword(rs.getString("password"));
-                user.setName(rs.getString("name"));
-                user.setEmail(rs.getString("email"));
-                user.setPhone(rs.getString("phone"));
-                user.setHourlyRate(rs.getDouble("hourlyRate"));
-                user.setRole(rs.getString("role"));
-                user.setActive(rs.getBoolean("active"));
-                users.add(user);
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return users;
-    }
-    
-    
+      
 } 

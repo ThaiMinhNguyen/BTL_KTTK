@@ -5,37 +5,25 @@ import java.time.LocalDateTime;
 
 public class TimeRecord implements Serializable {
     private int id;
-    private EmployeeShift employeeShift;
     private LocalDateTime actualStartTime;
     private LocalDateTime actualEndTime;
+    private EmployeeShift employeeShift;
     private Payment payment;
     
     public TimeRecord() {
     }
     
-    public TimeRecord(int id, EmployeeShift employeeShift, LocalDateTime actualStartTime, 
-            LocalDateTime actualEndTime, Payment payment) {
+    public TimeRecord(int id, LocalDateTime actualStartTime, LocalDateTime actualEndTime, EmployeeShift employeeShift) {
         this.id = id;
-        this.employeeShift = employeeShift;
         this.actualStartTime = actualStartTime;
         this.actualEndTime = actualEndTime;
-        this.payment = payment;
+        this.employeeShift = employeeShift;
     }
     
-    public TimeRecord(EmployeeShift employeeShift, LocalDateTime actualStartTime, 
-            LocalDateTime actualEndTime, Payment payment) {
-        this.employeeShift = employeeShift;
+    public TimeRecord(LocalDateTime actualStartTime, LocalDateTime actualEndTime, EmployeeShift employeeShift) {
         this.actualStartTime = actualStartTime;
         this.actualEndTime = actualEndTime;
-        this.payment = payment;
-    }
-    
-    // Constructor không có id và payment (khi tạo mới, payment sẽ được gán tự động bởi trigger)
-    public TimeRecord(EmployeeShift employeeShift, LocalDateTime actualStartTime, 
-            LocalDateTime actualEndTime) {
         this.employeeShift = employeeShift;
-        this.actualStartTime = actualStartTime;
-        this.actualEndTime = actualEndTime;
     }
 
     public int getId() {
@@ -44,14 +32,6 @@ public class TimeRecord implements Serializable {
 
     public void setId(int id) {
         this.id = id;
-    }
-
-    public EmployeeShift getEmployeeShift() {
-        return employeeShift;
-    }
-
-    public void setEmployeeShift(EmployeeShift employeeShift) {
-        this.employeeShift = employeeShift;
     }
 
     public LocalDateTime getActualStartTime() {
@@ -70,6 +50,14 @@ public class TimeRecord implements Serializable {
         this.actualEndTime = actualEndTime;
     }
 
+    public EmployeeShift getEmployeeShift() {
+        return employeeShift;
+    }
+
+    public void setEmployeeShift(EmployeeShift employeeShift) {
+        this.employeeShift = employeeShift;
+    }
+
     public Payment getPayment() {
         return payment;
     }
@@ -80,7 +68,7 @@ public class TimeRecord implements Serializable {
     
     @Override
     public String toString() {
-        return "TimeRecord{" + "id=" + id + ", employeeShift=" + employeeShift.getId() + 
-                ", actualStartTime=" + actualStartTime + ", actualEndTime=" + actualEndTime + '}';
+        return "TimeRecord{" + "id=" + id + ", actualStartTime=" + actualStartTime + 
+                ", actualEndTime=" + actualEndTime + ", employeeShift=" + employeeShift.getId() + '}';
     }
 } 

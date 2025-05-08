@@ -11,42 +11,32 @@ public class Payment implements Serializable {
     private Date paymentDate;
     private double totalHour;
     private double amount;
-    private User processedBy;
     private String status;
+    private User processedBy;
     private List<TimeRecord> timeRecords;
     
     public Payment() {
     }
     
-    public Payment(int id, User employee, Date weekStartDate, Date paymentDate, double totalHour, 
-            double amount, User processedBy, String status) {
+    public Payment(int id, User employee, Date weekStartDate, Date paymentDate, double totalHour, double amount, String status, User processedBy) {
         this.id = id;
         this.employee = employee;
         this.weekStartDate = weekStartDate;
         this.paymentDate = paymentDate;
         this.totalHour = totalHour;
         this.amount = amount;
-        this.processedBy = processedBy;
         this.status = status;
+        this.processedBy = processedBy;
     }
     
-    public Payment(User employee, Date weekStartDate, Date paymentDate, double totalHour, 
-            double amount, User processedBy, String status) {
+    public Payment(User employee, Date weekStartDate, Date paymentDate, double totalHour, double amount, String status, User processedBy) {
         this.employee = employee;
         this.weekStartDate = weekStartDate;
         this.paymentDate = paymentDate;
         this.totalHour = totalHour;
         this.amount = amount;
+        this.status = status;
         this.processedBy = processedBy;
-        this.status = status;
-    }
-    
-    public Payment(User employee, Date weekStartDate, String status) {
-        this.employee = employee;
-        this.weekStartDate = weekStartDate;
-        this.totalHour = 0;
-        this.amount = 0;
-        this.status = status;
     }
 
     public int getId() {
@@ -97,14 +87,6 @@ public class Payment implements Serializable {
         this.amount = amount;
     }
 
-    public User getProcessedBy() {
-        return processedBy;
-    }
-
-    public void setProcessedBy(User processedBy) {
-        this.processedBy = processedBy;
-    }
-
     public String getStatus() {
         return status;
     }
@@ -113,18 +95,26 @@ public class Payment implements Serializable {
         this.status = status;
     }
 
+    public User getProcessedBy() {
+        return processedBy;
+    }
+
+    public void setProcessedBy(User processedBy) {
+        this.processedBy = processedBy;
+    }
+    
     public List<TimeRecord> getTimeRecords() {
         return timeRecords;
     }
-
+    
     public void setTimeRecords(List<TimeRecord> timeRecords) {
         this.timeRecords = timeRecords;
     }
     
     @Override
     public String toString() {
-        return "Payment{" + "id=" + id + ", employee=" + employee.getId() + 
-                ", weekStartDate=" + weekStartDate + ", paymentDate=" + paymentDate + 
-                ", totalHour=" + totalHour + ", amount=" + amount + ", status=" + status + '}';
+        return "Payment{" + "id=" + id + ", employee=" + employee.getUsername() + ", weekStartDate=" + weekStartDate + 
+                ", paymentDate=" + paymentDate + ", totalHour=" + totalHour + ", amount=" + amount + 
+                ", status=" + status + ", processedBy=" + (processedBy != null ? processedBy.getUsername() : "null") + '}';
     }
 } 

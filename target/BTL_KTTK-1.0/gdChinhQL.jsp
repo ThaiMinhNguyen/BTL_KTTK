@@ -121,7 +121,7 @@
             
             <div class="functions">
                 <a href="schedule-management" class="function-btn" id="btnQuanLyLich">Quản lý lịch</a>
-                <a href="payment-management" class="function-btn" id="btnThanhToanTienCong">Thanh toán tiền công</a>
+                <a href="payment-management" class="function-btn" id="btnThanhToanTienCong">Quản lý tiền công</a>
             </div>
         </div>
     </div>

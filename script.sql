@@ -95,6 +95,7 @@ CREATE TABLE IF NOT EXISTS TimeRecord (
 -- Tạo trigger để tự động tạo hoặc liên kết Payment khi thêm TimeRecord mới
 DELIMITER //
 
+-- Trigger BEFORE INSERT để xác định hoặc tạo Payment
 CREATE TRIGGER before_timerecord_insert
 BEFORE INSERT ON TimeRecord
 FOR EACH ROW
@@ -102,14 +103,12 @@ BEGIN
     DECLARE employee_id INT;
     DECLARE week_start_date DATE;
     DECLARE existing_payment_id INT DEFAULT NULL;
-    DECLARE employee_hourly_rate DOUBLE(10,2);
     
     -- Lấy employee_id từ EmployeeShift tương ứng
-    SELECT es.tblUserId, DATE(SUBDATE(ss.weekStartDate, DAYOFWEEK(ss.weekStartDate)-1)), u.hourlyRate
-    INTO employee_id, week_start_date, employee_hourly_rate
+    SELECT es.tblUserId, ss.weekStartDate
+    INTO employee_id, week_start_date
     FROM EmployeeShift es
     JOIN ShiftSlot ss ON es.tblShiftSlotId = ss.id
-    JOIN User u ON es.tblUserId = u.id
     WHERE es.id = NEW.tblEmployeeShiftId;
     
     -- Kiểm tra xem đã có Payment nào cho employee trong tuần đó chưa
@@ -130,24 +129,38 @@ BEGIN
     
     -- Gán payment_id cho TimeRecord mới
     SET NEW.tblPaymentId = existing_payment_id;
+END //
+
+-- Trigger AFTER INSERT để cập nhật totalHour và amount
+CREATE TRIGGER after_timerecord_insert
+AFTER INSERT ON TimeRecord
+FOR EACH ROW
+BEGIN
+    DECLARE employee_hourly_rate DOUBLE(10,2);
     
-    -- Cập nhật tổng giờ và số tiền cho Payment
+    -- Lấy hourlyRate của employee
+    SELECT u.hourlyRate INTO employee_hourly_rate
+    FROM EmployeeShift es
+    JOIN User u ON es.tblUserId = u.id
+    WHERE es.id = NEW.tblEmployeeShiftId;
+    
+    -- Cập nhật tổng giờ và số tiền cho Payment tương ứng
     UPDATE Payment p
-    SET totalHour = (
+    SET p.totalHour = (
             SELECT COALESCE(SUM(
                 TIMESTAMPDIFF(SECOND, tr.actualStartTime, tr.actualEndTime) / 3600.0
             ), 0)
             FROM TimeRecord tr
-            WHERE tr.tblPaymentId = existing_payment_id
+            WHERE tr.tblPaymentId = NEW.tblPaymentId
         ),
-        amount = (
+        p.amount = (
             SELECT COALESCE(SUM(
                 TIMESTAMPDIFF(SECOND, tr.actualStartTime, tr.actualEndTime) / 3600.0
             ), 0) * employee_hourly_rate
             FROM TimeRecord tr
-            WHERE tr.tblPaymentId = existing_payment_id
+            WHERE tr.tblPaymentId = NEW.tblPaymentId
         )
-    WHERE id = existing_payment_id;
+    WHERE p.id = NEW.tblPaymentId;
 END //
 
 -- Tạo trigger để cập nhật hoặc xóa Payment khi TimeRecord bị xóa
@@ -180,6 +193,37 @@ BEGIN
             WHERE tr.tblPaymentId = NEW.tblPaymentId
         )
     WHERE p.id = NEW.tblPaymentId;
+END //
+
+CREATE TRIGGER after_timerecord_delete
+AFTER DELETE ON TimeRecord
+FOR EACH ROW
+BEGIN
+    DECLARE employee_hourly_rate DOUBLE(10,2);
+    
+    -- Lấy hourlyRate của employee
+    SELECT u.hourlyRate INTO employee_hourly_rate
+    FROM EmployeeShift es
+    JOIN User u ON es.tblUserId = u.id
+    WHERE es.id = OLD.tblEmployeeShiftId;
+    
+    -- Cập nhật tổng giờ và số tiền cho Payment tương ứng
+    UPDATE Payment p
+    SET p.totalHour = (
+            SELECT COALESCE(SUM(
+                TIMESTAMPDIFF(SECOND, tr.actualStartTime, tr.actualEndTime) / 3600.0
+            ), 0)
+            FROM TimeRecord tr
+            WHERE tr.tblPaymentId = OLD.tblPaymentId
+        ),
+        p.amount = (
+            SELECT COALESCE(SUM(
+                TIMESTAMPDIFF(SECOND, tr.actualStartTime, tr.actualEndTime) / 3600.0
+            ), 0) * employee_hourly_rate
+            FROM TimeRecord tr
+            WHERE tr.tblPaymentId = OLD.tblPaymentId
+        )
+    WHERE p.id = OLD.tblPaymentId;
 END //
 
 DELIMITER ;
