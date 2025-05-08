@@ -118,42 +118,52 @@ public class PaymentServlet extends HttpServlet {
             return;
         }
 
-        // lấy paymentId từ request
-        String paymentIdStr = request.getParameter("paymentId");
+        // Get employee from request
+        String employeeIdStr = request.getParameter("employeeId");
+        String weekStartDateStr = request.getParameter("weekStartDate");
 
-        if (paymentIdStr != null) {
+        if (employeeIdStr != null && weekStartDateStr != null) {
             try {
-                int paymentId = Integer.parseInt(paymentIdStr);
+                int employeeId = Integer.parseInt(employeeIdStr);
+                SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+                Date weekStartDate = dateFormat.parse(weekStartDateStr);
+
+                // Get user
+                User employee = userDAO.getUserById(employeeId);
+
+                // Get time records for the employee for the selected week
+                List<TimeRecord> timeRecords = timeRecordDAO.getTimeRecordsByUser(employeeId, weekStartDate);
+
+                // Calculate total hours and amount
+                double totalHours = 0;
+                double amount = 0;
+
                 
-                // Lấy payment
-                Payment payment = paymentDAO.getPaymentById(paymentId);
-                
-                if (payment != null) {
-                    User employee = payment.getEmployee();
-                    Date weekStartDate = payment.getWeekStartDate();
-                    double totalHours = payment.getTotalHour();
-                    double amount = payment.getAmount();
-                    
-                    //Lấy danh sách TimeRecord của Payment
-                    List<TimeRecord> timeRecords = timeRecordDAO.getTimeRecordsByUser(employee.getId(), weekStartDate);
-                    
-                    //Set attribute gửi tới gdPheDuyetChamCong
-                    request.setAttribute("payment", payment);
-                    request.setAttribute("employee", employee);
-                    request.setAttribute("weekStartDate", weekStartDate);
-                    request.setAttribute("timeRecords", timeRecords);
-                    request.setAttribute("totalHours", totalHours);
-                    request.setAttribute("amount", amount);
-                    
-                    
-                    request.getRequestDispatcher("gdPheDuyetChamcong.jsp").forward(request, response);
-                    return;
+
+                // Check if payment already exists
+                Payment existingPayment = paymentDAO.getUserPaymentByWeek(employeeId, weekStartDate);
+                if (existingPayment != null) {
+                    totalHours = existingPayment.getTotalHour();
+                    amount = existingPayment.getAmount();
+                    request.setAttribute("payment", existingPayment);
                 }
-            } catch (NumberFormatException e) {
                 
+                // Set attributes for the JSP
+                request.setAttribute("employee", employee);
+                request.setAttribute("weekStartDate", weekStartDate);
+                request.setAttribute("timeRecords", timeRecords);
+                request.setAttribute("totalHours", totalHours);
+                request.setAttribute("amount", amount);
+                
+                // Forward to JSP
+                request.getRequestDispatcher("gdPheDuyetChamcong.jsp").forward(request, response);
+                return;
+            } catch (NumberFormatException | ParseException e) {
+                // Do nothing, will redirect to timekeeping management
             }
         }
 
+        // Redirect back if parameters are missing or invalid
         response.sendRedirect("payment-management");
     }
 
@@ -167,13 +177,41 @@ public class PaymentServlet extends HttpServlet {
         }
 
         // Get parameters
-        String paymentIdStr = request.getParameter("paymentId");
+        String employeeIdStr = request.getParameter("employeeId");
+        String weekStartDateStr = request.getParameter("weekStartDate");
+        String totalHoursStr = request.getParameter("totalHours");
+        String amountStr = request.getParameter("amount");
 
         try {
-            int paymentId = Integer.parseInt(paymentIdStr);
-            
-            // Process payment
-            boolean success = paymentDAO.processPayment(paymentId, user.getId(), new Date());
+            int employeeId = Integer.parseInt(employeeIdStr);
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+            Date weekStartDate = dateFormat.parse(weekStartDateStr);
+            double totalHours = Double.parseDouble(totalHoursStr);
+            double amount = Double.parseDouble(amountStr);
+
+            // Get employee
+            User employee = userDAO.getUserById(employeeId);
+
+            // Check if payment already exists
+            Payment existingPayment = paymentDAO.getUserPaymentByWeek(employeeId, weekStartDate);
+
+            boolean success;
+            if (existingPayment != null) {
+                //Set status thành PAID
+                success = paymentDAO.processPayment(existingPayment.getId(), user.getId(), new Date());
+            } else {
+                // Create new payment
+                Payment payment = new Payment();
+                payment.setEmployee(employee);
+                payment.setWeekStartDate(weekStartDate);
+                payment.setPaymentDate(new Date());
+                payment.setTotalHour(totalHours);
+                payment.setAmount(amount);
+                payment.setStatus("PAID");
+                payment.setProcessedBy(user);
+
+                success = paymentDAO.createPayment(payment);
+            }
 
             if (success) {
                 request.setAttribute("successMessage", "Thanh toán đã được phê duyệt thành công!");
@@ -181,7 +219,7 @@ public class PaymentServlet extends HttpServlet {
                 request.setAttribute("errorMessage", "Có lỗi xảy ra khi phê duyệt thanh toán.");
             }
 
-        } catch (NumberFormatException e) {
+        } catch (NumberFormatException | ParseException e) {
             request.setAttribute("errorMessage", "Dữ liệu không hợp lệ.");
         }
 

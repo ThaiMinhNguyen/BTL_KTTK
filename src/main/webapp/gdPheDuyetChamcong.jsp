@@ -155,7 +155,10 @@
         <% } else { %>
             <form action="process-payment" method="POST">
                 <input type="hidden" name="action" value="approve_payment">
-                <input type="hidden" name="paymentId" value="<%= payment != null ? payment.getId() : "" %>">
+                <input type="hidden" name="employeeId" value="<%= employee != null ? employee.getId() : "" %>">
+                <input type="hidden" name="weekStartDate" value="<%= weekStartDate != null ? dateFormat.format(weekStartDate) : "" %>">
+                <input type="hidden" name="totalHours" value="<%= totalHours != null ? totalHours : "0" %>">
+                <input type="hidden" name="amount" value="<%= amount != null ? amount : "0" %>">
                 
                 <button type="submit" class="approval-button">Phê duyệt</button>
             </form>
