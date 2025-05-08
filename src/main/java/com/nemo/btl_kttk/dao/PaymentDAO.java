@@ -43,8 +43,6 @@ public class PaymentDAO extends DAO {
                 User processedBy = userDAO.getUserById(rs.getInt("tblProcessedById"));
                 payment.setProcessedBy(processedBy);
                 
-                // Load time records
-                payment.setTimeRecords(getTimeRecordsForPayment(id));
                 
                 return payment;
             }
