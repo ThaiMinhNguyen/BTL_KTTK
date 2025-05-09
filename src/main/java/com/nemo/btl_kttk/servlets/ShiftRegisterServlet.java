@@ -5,7 +5,6 @@ import com.nemo.btl_kttk.dao.ShiftSlotDAO;
 import com.nemo.btl_kttk.dao.TimeRecordDAO;
 import com.nemo.btl_kttk.models.EmployeeShift;
 import com.nemo.btl_kttk.models.ShiftSlot;
-import com.nemo.btl_kttk.models.TimeRecord;
 import com.nemo.btl_kttk.models.User;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -16,8 +15,6 @@ import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.Date;
 import java.util.List;
 
