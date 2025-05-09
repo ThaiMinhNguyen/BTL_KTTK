@@ -194,7 +194,7 @@ public class PaymentServlet extends HttpServlet {
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(date);
 
-        // lấy ngày trong tuần (trong Calendar: 1=Sunday, 2=Monday, ..., 7=Saturday)
+        // lấy ngày trong tuần (trong Calendar thì Sunday là 1)
         int dayOfWeek = calendar.get(java.util.Calendar.DAY_OF_WEEK);
 
         //Trừ đi để chuyển về ngày đầu tuần
