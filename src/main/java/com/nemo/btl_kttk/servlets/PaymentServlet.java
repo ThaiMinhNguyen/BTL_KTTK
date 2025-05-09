@@ -16,6 +16,7 @@ import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
@@ -190,7 +191,7 @@ public class PaymentServlet extends HttpServlet {
 
     //Hàm chuyển ngày trong tuần thành ngày đầu tuần
     private Date adjustToMondayOfWeek(Date date) {
-        java.util.Calendar calendar = java.util.Calendar.getInstance();
+        Calendar calendar = Calendar.getInstance();
         calendar.setTime(date);
 
         // lấy ngày trong tuần (trong Calendar: 1=Sunday, 2=Monday, ..., 7=Saturday)
@@ -198,10 +199,10 @@ public class PaymentServlet extends HttpServlet {
 
         //Trừ đi để chuyển về ngày đầu tuần
         int daysToSubtract;
-        if (dayOfWeek == java.util.Calendar.SUNDAY) { // Sunday
-            daysToSubtract = 6; // Subtract 6 days to get to previous Monday
+        if (dayOfWeek == java.util.Calendar.SUNDAY) {
+            daysToSubtract = 6; 
         } else {
-            daysToSubtract = dayOfWeek - java.util.Calendar.MONDAY; // Subtract to get to Monday of same week
+            daysToSubtract = dayOfWeek - java.util.Calendar.MONDAY; 
         }
 
         //chuyển thành ngày đầu tuần
