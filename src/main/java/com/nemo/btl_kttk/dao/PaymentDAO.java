@@ -1,13 +1,11 @@
 package com.nemo.btl_kttk.dao;
 
 import com.nemo.btl_kttk.models.Payment;
-import com.nemo.btl_kttk.models.TimeRecord;
 import com.nemo.btl_kttk.models.User;
 import java.util.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
