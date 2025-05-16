@@ -95,12 +95,13 @@
         List<TimeRecord> timeRecords = (List<TimeRecord>) request.getAttribute("timeRecords");
         Payment payment = (Payment) request.getAttribute("payment");
         
-        // Format cho số và ngày
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
         SimpleDateFormat dateTimeFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
         DateTimeFormatter localDateTimeFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
         DecimalFormat hourFormat = new DecimalFormat("#,##0.00");
         DecimalFormat moneyFormat = new DecimalFormat("#,##0");
+
+        double actualTotalPayment = 0;
     %>
     <div class="container">
         <% if(successMessage != null && !successMessage.isEmpty()) { %>
@@ -143,9 +144,8 @@
                         <td colspan="8" style="text-align: center;">Không có dữ liệu chấm công nào.</td>
                     </tr>
                 <% } else { %>
-                    <% double actualTotalPayment = 0; %>
                     <% for(TimeRecord record : timeRecords) { 
-                        // Get shift slot info
+                        //Lấy shiftSlot
                         ShiftSlot shiftSlot = record.getEmployeeShift().getShiftSlot();
                         Date scheduledStart = shiftSlot.getStartTime();
                         Date scheduledEnd = shiftSlot.getEndTime();
