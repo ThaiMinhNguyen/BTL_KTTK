@@ -143,6 +143,7 @@
                         <td colspan="8" style="text-align: center;">Không có dữ liệu chấm công nào.</td>
                     </tr>
                 <% } else { %>
+                    <% double actualTotalPayment = 0; %>
                     <% for(TimeRecord record : timeRecords) { 
                         // Get shift slot info
                         ShiftSlot shiftSlot = record.getEmployeeShift().getShiftSlot();
@@ -187,22 +188,30 @@
                         
                         // Tính toán tiền công
                         double hourlyRate = employee.getHourlyRate();
-                        double lateFee = lateHours * hourlyRate * 0.5;
-                        double earlyFee = earlyHours * hourlyRate * 0.5;
-                        double overtimeBonus = overtimeHours * hourlyRate * 1.5; 
-                        double totalPayment = (actualHours * hourlyRate) - lateFee - earlyFee + overtimeBonus;
+                        double lateFee = Math.ceil(lateHours * hourlyRate * 0.5);
+                        double earlyFee = Math.ceil(earlyHours * hourlyRate * 0.5);
+                        double overtimeBonus = Math.ceil(overtimeHours * hourlyRate * 1.5);
+                        double basePayment = Math.ceil(actualHours * hourlyRate);
+                        double totalPayment = basePayment - lateFee - earlyFee + overtimeBonus;
                     %>
                         <tr>
                             <td><%= record.getId() %></td>
                             <td><%= record.getActualStartTime() != null ? record.getActualStartTime().format(localDateTimeFormatter) : "" %></td>
                             <td><%= record.getActualEndTime() != null ? record.getActualEndTime().format(localDateTimeFormatter) : "" %></td>
-                            <td><%= hourFormat.format(actualHours) %> giờ</td>
+                            <td><%= hourFormat.format(actualHours) %> giờ (<%= moneyFormat.format(basePayment) %> VNĐ)</td>
                             <td><%= lateHours > 0 ? hourFormat.format(lateHours) + " giờ (-" + moneyFormat.format(lateFee) + " VNĐ)" : "-" %></td>
                             <td><%= earlyHours > 0 ? hourFormat.format(earlyHours) + " giờ (-" + moneyFormat.format(earlyFee) + " VNĐ)" : "-" %></td>
                             <td><%= overtimeHours > 0 ? hourFormat.format(overtimeHours) + " giờ (+" + moneyFormat.format(overtimeBonus) + " VNĐ)" : "-" %></td>
                             <td><%= moneyFormat.format(totalPayment) %> VNĐ</td>
                         </tr>
-                    <% } %>
+                    <% 
+                        actualTotalPayment += totalPayment;
+                        } 
+                    %>
+                        <tr style="font-weight: bold; background-color: #f0f0f0;">
+                            <td colspan="7" style="text-align: right;">Tổng tiền thực tế:</td>
+                            <td><%= moneyFormat.format(actualTotalPayment) %> VNĐ</td>
+                        </tr>
                 <% } %>
             </tbody>
         </table>
@@ -216,6 +225,7 @@
             <form action="process-payment" method="POST">
                 <input type="hidden" name="action" value="approve_payment">
                 <input type="hidden" name="paymentId" value="<%= payment != null ? payment.getId() : "" %>">
+                <input type="hidden" name="actualTotalPayment" value="<%= actualTotalPayment %>">
                 
                 <button type="submit" class="approval-button">Phê duyệt</button>
             </form>

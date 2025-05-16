@@ -48,14 +48,15 @@ public class PaymentDAO extends DAO {
         return null;
     }
     
-   
-    public boolean processPayment(int paymentId, int processedById, Date paymentDate) {
-        String sql = "UPDATE Payment SET paymentDate = ?, status = 'PAID', tblProcessedById = ? WHERE id = ?";
+    
+    public boolean processPayment(int paymentId, int processedById, Date paymentDate, double actualAmount) {
+        String sql = "UPDATE Payment SET paymentDate = ?, status = 'PAID', tblProcessedById = ?, amount = ? WHERE id = ?";
         try {
             PreparedStatement ps = connection.prepareStatement(sql);
             ps.setDate(1, new java.sql.Date(paymentDate.getTime()));
             ps.setInt(2, processedById);
-            ps.setInt(3, paymentId);
+            ps.setDouble(3, actualAmount);
+            ps.setInt(4, paymentId);
             
             int affectedRows = ps.executeUpdate();
             return affectedRows > 0;

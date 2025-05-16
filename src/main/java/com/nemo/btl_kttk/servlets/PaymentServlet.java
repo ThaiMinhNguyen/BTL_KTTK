@@ -163,17 +163,19 @@ public class PaymentServlet extends HttpServlet {
 
         //Lấy paymentId
         String paymentIdStr = request.getParameter("paymentId");
+        String actualTotalPaymentStr = request.getParameter("actualTotalPayment");
 
         try {
             int paymentId = Integer.parseInt(paymentIdStr);
+            double actualTotalPayment = Double.parseDouble(actualTotalPaymentStr);
             
             //Lấy payment
             Payment payment = paymentDAO.getPaymentById(paymentId);
             
             boolean success = false;
             if (payment != null) {
-                //chuyển status thành PAID
-                success = paymentDAO.processPayment(paymentId, user.getId(), new Date());
+                //chuyển status thành PAID và cập nhật số tiền thực tế
+                success = paymentDAO.processPayment(paymentId, user.getId(), new Date(), actualTotalPayment);
             }
 
             if (success) {
