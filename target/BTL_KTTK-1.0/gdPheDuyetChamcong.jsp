@@ -4,6 +4,10 @@
 <%@ page import="java.text.SimpleDateFormat" %>
 <%@ page import="java.text.DecimalFormat" %>
 <%@ page import="java.time.format.DateTimeFormatter" %>
+<%@ page import="java.time.LocalDate" %>
+<%@ page import="java.time.ZoneId" %>
+<%@ page import="java.time.temporal.WeekFields" %>
+<%@ page import="java.util.Locale" %>
 <!DOCTYPE html>
 <html>
 <head>
@@ -54,7 +58,7 @@
         
         .approval-button {
             display: block;
-            width: 120px;
+            width: 200px;
             margin: 20px auto;
             padding: 8px 0;
             background-color: #e6f2ff;
@@ -81,6 +85,13 @@
             font-weight: bold;
             margin: 10px 0;
         }
+        
+        .warning-message {
+            color: orange;
+            text-align: center;
+            font-weight: bold;
+            margin: 10px 0;
+        }
     </style>
 </head>
 <body>
@@ -102,6 +113,42 @@
         DecimalFormat moneyFormat = new DecimalFormat("#,##0");
 
         double actualTotalPayment = 0;
+        
+        // Kiểm tra xem đã hết tuần chưa
+        boolean isWeekEnded = false;
+        
+        if (weekStartDate != null) {
+            // Chuyển Date thành LocalDate
+            LocalDate startLocalDate;
+            if (weekStartDate instanceof java.sql.Date) {
+                // Chuyển đổi java.sql.Date sang LocalDate
+                startLocalDate = ((java.sql.Date) weekStartDate).toLocalDate();
+            } else {
+                // Chuyển đổi java.util.Date sang LocalDate
+                startLocalDate = weekStartDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+            }
+            
+            LocalDate today = LocalDate.now();
+            
+            // Tìm ngày chủ nhật cuối tuần (startDate + 6 ngày)
+            LocalDate endOfWeek = startLocalDate.plusDays(6);
+            
+            // Nếu ngày hiện tại lớn hơn hoặc bằng ngày cuối tuần -> đã hết tuần
+            if (today.isAfter(endOfWeek) || today.isEqual(endOfWeek)) {
+                isWeekEnded = true;
+            }
+            
+            // Hoặc nếu ngày hôm nay nằm trong tuần tiếp theo
+            WeekFields weekFields = WeekFields.of(Locale.getDefault());
+            int startWeek = startLocalDate.get(weekFields.weekOfWeekBasedYear());
+            int startYear = startLocalDate.get(weekFields.weekBasedYear());
+            int todayWeek = today.get(weekFields.weekOfWeekBasedYear());
+            int todayYear = today.get(weekFields.weekBasedYear());
+            
+            if (todayYear > startYear || (todayYear == startYear && todayWeek > startWeek)) {
+                isWeekEnded = true;
+            }
+        }
     %>
     <div class="container">
         <% if(successMessage != null && !successMessage.isEmpty()) { %>
@@ -121,6 +168,17 @@
             </div>
             <div class="info-item">
                 <strong>Tiền công dự tính:</strong> <%= amount != null ? moneyFormat.format(amount) : "0" %> VNĐ
+            </div>
+            <div class="info-item">
+                <strong>Tuần bắt đầu:</strong> <%= weekStartDate != null ? dateFormat.format(weekStartDate) : "" %>
+            </div>
+            <div class="info-item">
+                <strong>Trạng thái tuần:</strong> 
+                <% if (isWeekEnded) { %>
+                    <span style="color: green;">Đã kết thúc</span>
+                <% } else { %>
+                    <span style="color: red;">Chưa kết thúc</span>
+                <% } %>
             </div>
         </div>
         
@@ -218,17 +276,33 @@
         
         <% if(payment != null && "PAID".equals(payment.getStatus())) { %>
             <div class="success-message">
+                Đã thanh toán cho nhân viên bởi: <%= payment.getProcessedBy().getUsername() %> vào 
+                <%= dateTimeFormat.format(payment.getPaymentDate()) %>
+            </div>
+        <% } else if(payment != null && "APPROVED".equals(payment.getStatus())) { %>
+            <div class="success-message">
                 Đã phê duyệt thanh toán bởi: <%= payment.getProcessedBy().getUsername() %> vào 
                 <%= dateTimeFormat.format(payment.getPaymentDate()) %>
             </div>
-        <% } else { %>
             <form action="process-payment" method="POST">
-                <input type="hidden" name="action" value="approve_payment">
-                <input type="hidden" name="paymentId" value="<%= payment != null ? payment.getId() : "" %>">
-                <input type="hidden" name="actualTotalPayment" value="<%= actualTotalPayment %>">
-                
-                <button type="submit" class="approval-button">Phê duyệt</button>
+                <input type="hidden" name="action" value="confirm_payment">
+                <input type="hidden" name="paymentId" value="<%= payment.getId() %>">
+                <button type="submit" class="approval-button">Xác nhận thanh toán cho nhân viên</button>
             </form>
+        <% } else { %>
+            <% if (isWeekEnded) { %>
+                <form action="process-payment" method="POST">
+                    <input type="hidden" name="action" value="approve_payment">
+                    <input type="hidden" name="paymentId" value="<%= payment != null ? payment.getId() : "" %>">
+                    <input type="hidden" name="actualTotalPayment" value="<%= actualTotalPayment %>">
+                    
+                    <button type="submit" class="approval-button">Phê duyệt</button>
+                </form>
+            <% } else { %>
+                <div class="warning-message">
+                    Không thể phê duyệt thanh toán khi tuần chấm công chưa kết thúc. Vui lòng quay lại vào cuối tuần.
+                </div>
+            <% } %>
         <% } %>
     </div>
 </body>
