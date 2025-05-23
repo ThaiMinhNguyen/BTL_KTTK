@@ -193,63 +193,23 @@
                     </tr>
                 <% } else { %>
                     <% for(TimeRecord record : timeRecords) { 
-                        //Lấy shiftSlot
-                        ShiftSlot shiftSlot = record.getEmployeeShift().getShiftSlot();
-                        Date scheduledStart = shiftSlot.getStartTime();
-                        Date scheduledEnd = shiftSlot.getEndTime();
-                        
-                        // tính số giờ làm thực tế
-                        double actualHours = 0;
-                        if (record.getActualStartTime() != null && record.getActualEndTime() != null) {
-                            actualHours = java.time.Duration.between(
-                                record.getActualStartTime(), 
-                                record.getActualEndTime()
-                            ).toMillis() / (1000.0 * 60 * 60);
-                        }
-                        
-                        // tính số giờ làm của lịch
-                        double scheduledHours = 0;
-                        if (scheduledStart != null && scheduledEnd != null) {
-                            scheduledHours = (scheduledEnd.getTime() - scheduledStart.getTime()) / (1000.0 * 60 * 60);
-                        }
-                        
-                        // Tính số giờ đi muộn
-                        double lateHours = 0;
-                        if (record.getActualStartTime() != null && scheduledStart != null) {
-                            lateHours = Math.max(0, java.time.Duration.between(
-                                scheduledStart.toInstant().atZone(java.time.ZoneId.systemDefault()).toLocalDateTime(),
-                                record.getActualStartTime()
-                            ).toMillis() / (1000.0 * 60 * 60));
-                        }
-                        
-                        // Tính số giờ về sớm
-                        double earlyHours = 0;
-                        if (record.getActualEndTime() != null && scheduledEnd != null) {
-                            earlyHours = Math.max(0, java.time.Duration.between(
-                                record.getActualEndTime(),
-                                scheduledEnd.toInstant().atZone(java.time.ZoneId.systemDefault()).toLocalDateTime()
-                            ).toMillis() / (1000.0 * 60 * 60));
-                        }
-                        
-                        // Tính số giờ làm thêm
-                        double overtimeHours = Math.max(0, actualHours - scheduledHours);
-                        
                         // Tính toán tiền công
                         double hourlyRate = employee.getHourlyRate();
-                        double lateFee = Math.ceil(lateHours * hourlyRate * 0.5);
-                        double earlyFee = Math.ceil(earlyHours * hourlyRate * 0.5);
-                        double overtimeBonus = Math.ceil(overtimeHours * hourlyRate * 1.5);
+                        double actualHours = java.time.Duration.between(
+                            record.getActualStartTime(), 
+                            record.getActualEndTime()
+                        ).toMillis() / (1000.0 * 60 * 60);
                         double basePayment = Math.ceil(actualHours * hourlyRate);
-                        double totalPayment = basePayment - lateFee - earlyFee + overtimeBonus;
+                        double totalPayment = basePayment - record.getLateFee() - record.getEarlyFee() + record.getBonus();
                     %>
                         <tr>
                             <td><%= record.getId() %></td>
                             <td><%= record.getActualStartTime() != null ? record.getActualStartTime().format(localDateTimeFormatter) : "" %></td>
                             <td><%= record.getActualEndTime() != null ? record.getActualEndTime().format(localDateTimeFormatter) : "" %></td>
                             <td><%= hourFormat.format(actualHours) %> giờ (<%= moneyFormat.format(basePayment) %> VNĐ)</td>
-                            <td><%= lateHours > 0 ? hourFormat.format(lateHours) + " giờ (-" + moneyFormat.format(lateFee) + " VNĐ)" : "-" %></td>
-                            <td><%= earlyHours > 0 ? hourFormat.format(earlyHours) + " giờ (-" + moneyFormat.format(earlyFee) + " VNĐ)" : "-" %></td>
-                            <td><%= overtimeHours > 0 ? hourFormat.format(overtimeHours) + " giờ (+" + moneyFormat.format(overtimeBonus) + " VNĐ)" : "-" %></td>
+                            <td><%= record.getLateFee() > 0 ? "(-" + moneyFormat.format(record.getLateFee()) + " VNĐ)" : "-" %></td>
+                            <td><%= record.getEarlyFee() > 0 ? "(-" + moneyFormat.format(record.getEarlyFee()) + " VNĐ)" : "-" %></td>
+                            <td><%= record.getBonus() > 0 ? "(+" + moneyFormat.format(record.getBonus()) + " VNĐ)" : "-" %></td>
                             <td><%= moneyFormat.format(totalPayment) %> VNĐ</td>
                         </tr>
                     <% 

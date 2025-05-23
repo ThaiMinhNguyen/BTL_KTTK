@@ -7,6 +7,9 @@ public class TimeRecord implements Serializable {
     private int id;
     private LocalDateTime actualStartTime;
     private LocalDateTime actualEndTime;
+    private double lateFee;
+    private double earlyFee;
+    private double bonus;
     private EmployeeShift employeeShift;
     private Payment payment;
     
@@ -18,12 +21,18 @@ public class TimeRecord implements Serializable {
         this.actualStartTime = actualStartTime;
         this.actualEndTime = actualEndTime;
         this.employeeShift = employeeShift;
+        this.lateFee = 0.00;
+        this.earlyFee = 0.00;
+        this.bonus = 0.00;
     }
     
     public TimeRecord(LocalDateTime actualStartTime, LocalDateTime actualEndTime, EmployeeShift employeeShift) {
         this.actualStartTime = actualStartTime;
         this.actualEndTime = actualEndTime;
         this.employeeShift = employeeShift;
+        this.lateFee = 0.00;
+        this.earlyFee = 0.00;
+        this.bonus = 0.00;
     }
 
     public int getId() {
@@ -50,6 +59,30 @@ public class TimeRecord implements Serializable {
         this.actualEndTime = actualEndTime;
     }
 
+    public double getLateFee() {
+        return lateFee;
+    }
+
+    public void setLateFee(double lateFee) {
+        this.lateFee = lateFee;
+    }
+
+    public double getEarlyFee() {
+        return earlyFee;
+    }
+
+    public void setEarlyFee(double earlyFee) {
+        this.earlyFee = earlyFee;
+    }
+
+    public double getBonus() {
+        return bonus;
+    }
+
+    public void setBonus(double bonus) {
+        this.bonus = bonus;
+    }
+
     public EmployeeShift getEmployeeShift() {
         return employeeShift;
     }
@@ -69,6 +102,8 @@ public class TimeRecord implements Serializable {
     @Override
     public String toString() {
         return "TimeRecord{" + "id=" + id + ", actualStartTime=" + actualStartTime + 
-                ", actualEndTime=" + actualEndTime + ", employeeShift=" + employeeShift.getId() + '}';
+                ", actualEndTime=" + actualEndTime + ", lateFee=" + lateFee + 
+                ", earlyFee=" + earlyFee + ", bonus=" + bonus + 
+                ", employeeShift=" + employeeShift.getId() + '}';
     }
 } 

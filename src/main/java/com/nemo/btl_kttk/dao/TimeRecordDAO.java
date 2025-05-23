@@ -6,8 +6,11 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 
 public class TimeRecordDAO extends DAO {
@@ -46,6 +49,11 @@ public class TimeRecordDAO extends DAO {
                     timeRecord.setActualEndTime(endTimestamp.toLocalDateTime());
                 }
 
+                // Đọc các trường mới
+                timeRecord.setLateFee(rs.getDouble("lateFee"));
+                timeRecord.setEarlyFee(rs.getDouble("earlyFee"));
+                timeRecord.setBonus(rs.getDouble("bonus"));
+
                 // Lấy thông tin EmployeeShift
                 int employeeShiftId = rs.getInt("tblEmployeeShiftId");
                 EmployeeShift employeeShift = employeeShiftDAO.getEmployeeShiftById(employeeShiftId);
@@ -60,4 +68,159 @@ public class TimeRecordDAO extends DAO {
         return timeRecords;
     }
 
+    public double calculateLateFee(TimeRecord timeRecord, double lateMinutesFeeRate) {
+        if (timeRecord.getActualStartTime() == null || timeRecord.getEmployeeShift() == null) {
+            return 0.0;
+        }
+
+        // Chuyển đổi Date sang LocalDateTime
+        LocalDateTime scheduledStartTime = timeRecord.getEmployeeShift().getShiftSlot().getStartTime()
+                .toInstant().atZone(java.time.ZoneId.systemDefault()).toLocalDateTime();
+        LocalDateTime actualStartTime = timeRecord.getActualStartTime();
+
+        if (actualStartTime.isAfter(scheduledStartTime)) {
+            long lateMinutes = ChronoUnit.MINUTES.between(scheduledStartTime, actualStartTime);
+            return lateMinutes * lateMinutesFeeRate;
+        }
+
+        return 0.0;
+    }
+
+    public double calculateEarlyFee(TimeRecord timeRecord, double earlyMinutesFeeRate) {
+        if (timeRecord.getActualEndTime() == null || timeRecord.getEmployeeShift() == null) {
+            return 0.0;
+        }
+
+        // Chuyển đổi Date sang LocalDateTime
+        LocalDateTime scheduledEndTime = timeRecord.getEmployeeShift().getShiftSlot().getEndTime()
+                .toInstant().atZone(java.time.ZoneId.systemDefault()).toLocalDateTime();
+        LocalDateTime actualEndTime = timeRecord.getActualEndTime();
+
+        if (actualEndTime.isBefore(scheduledEndTime)) {
+            long earlyMinutes = ChronoUnit.MINUTES.between(actualEndTime, scheduledEndTime);
+            return earlyMinutes * earlyMinutesFeeRate;
+        }
+
+        return 0.0;
+    }
+
+    public double calculateOvertimeBonus(TimeRecord timeRecord, double overtimeRate, double hourlyRate) {
+        if (timeRecord.getActualStartTime() == null || timeRecord.getActualEndTime() == null || timeRecord.getEmployeeShift() == null) {
+            return 0.0;
+        }
+
+        // Tính tổng số giờ thực tế
+        double actualHours = java.time.Duration.between(
+            timeRecord.getActualStartTime(),
+            timeRecord.getActualEndTime()
+        ).toMillis() / (1000.0 * 60 * 60);
+
+        // Tính tổng số giờ đăng ký
+        Date scheduledStart = timeRecord.getEmployeeShift().getShiftSlot().getStartTime();
+        Date scheduledEnd = timeRecord.getEmployeeShift().getShiftSlot().getEndTime();
+        double scheduledHours = (scheduledEnd.getTime() - scheduledStart.getTime()) / (1000.0 * 60 * 60);
+
+        // Nếu số giờ thực tế lớn hơn số giờ đăng ký
+        if (actualHours > scheduledHours) {
+            double overtimeHours = actualHours - scheduledHours;
+            return overtimeHours * hourlyRate * (overtimeRate - 1.0); // Chỉ tính phần thưởng thêm
+        }
+
+        return 0.0;
+    }
+
+    public boolean updateTimeRecordFees(int timeRecordId, double lateFee, double earlyFee, double bonus) {
+        String sql = "UPDATE TimeRecord SET lateFee = ?, earlyFee = ?, bonus = ? WHERE id = ?";
+        
+        try {
+            PreparedStatement ps = connection.prepareStatement(sql);
+            ps.setDouble(1, lateFee);
+            ps.setDouble(2, earlyFee);
+            ps.setDouble(3, bonus);
+            ps.setInt(4, timeRecordId);
+            
+            int rowsAffected = ps.executeUpdate();
+            return rowsAffected > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public boolean calculateAndUpdateAllFees(TimeRecord timeRecord, double lateMinutesFeeRate, 
+            double earlyMinutesFeeRate, double overtimeRate, double hourlyRate) {
+        
+        double lateFee = calculateLateFee(timeRecord, lateMinutesFeeRate);
+        double earlyFee = calculateEarlyFee(timeRecord, earlyMinutesFeeRate);
+        double overtimeBonus = calculateOvertimeBonus(timeRecord, overtimeRate, hourlyRate);
+        
+        // Cập nhật TimeRecord object
+        timeRecord.setLateFee(lateFee);
+        timeRecord.setEarlyFee(earlyFee);
+        timeRecord.setBonus(overtimeBonus);
+        
+        // Cập nhật database
+        return updateTimeRecordFees(timeRecord.getId(), lateFee, earlyFee, overtimeBonus);
+    }
+
+    public TimeRecord createTimeRecord(LocalDateTime actualStartTime, LocalDateTime actualEndTime, int employeeShiftId) {
+        try {
+            // 1. Lấy thông tin EmployeeShift
+            EmployeeShift employeeShift = employeeShiftDAO.getEmployeeShiftById(employeeShiftId);
+            if (employeeShift == null) {
+                System.out.println("Không tìm thấy EmployeeShift với ID: " + employeeShiftId);
+                return null;
+            }
+
+            // 2. Lấy hourlyRate của nhân viên
+            double hourlyRate = employeeShift.getEmployee().getHourlyRate();
+
+            // 3. Tạo TimeRecord mới
+            TimeRecord timeRecord = new TimeRecord();
+            timeRecord.setActualStartTime(actualStartTime);
+            timeRecord.setActualEndTime(actualEndTime);
+            timeRecord.setEmployeeShift(employeeShift);
+
+            // 4. Tính toán các khoản phí và thưởng với giá trị mặc định
+            double lateFee = calculateLateFee(timeRecord, 0.5);  // 0.5 đồng/phút đi muộn
+            double earlyFee = calculateEarlyFee(timeRecord, 0.5); // 0.5 đồng/phút về sớm
+            double overtimeBonus = calculateOvertimeBonus(timeRecord, 1.5, hourlyRate); // 150% lương cho làm thêm giờ
+
+            // 5. Set các giá trị đã tính
+            timeRecord.setLateFee(lateFee);
+            timeRecord.setEarlyFee(earlyFee);
+            timeRecord.setBonus(overtimeBonus);
+
+            // 6. Lưu vào database
+            String sql = "INSERT INTO TimeRecord (actualStartTime, actualEndTime, lateFee, earlyFee, bonus, tblEmployeeShiftId) " +
+                        "VALUES (?, ?, ?, ?, ?, ?)";
+            
+            PreparedStatement ps = connection.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS);
+            ps.setTimestamp(1, Timestamp.valueOf(actualStartTime));
+            ps.setTimestamp(2, Timestamp.valueOf(actualEndTime));
+            ps.setDouble(3, lateFee);
+            ps.setDouble(4, earlyFee);
+            ps.setDouble(5, overtimeBonus);
+            ps.setInt(6, employeeShiftId);
+
+            int affectedRows = ps.executeUpdate();
+            if (affectedRows == 0) {
+                throw new SQLException("Không thể tạo TimeRecord, không có dòng nào bị ảnh hưởng.");
+            }
+
+            // 7. Lấy ID được tạo tự động
+            try (ResultSet generatedKeys = ps.getGeneratedKeys()) {
+                if (generatedKeys.next()) {
+                    timeRecord.setId(generatedKeys.getInt(1));
+                    return timeRecord;
+                } else {
+                    throw new SQLException("Không thể tạo TimeRecord, không có ID được tạo.");
+                }
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
 }
