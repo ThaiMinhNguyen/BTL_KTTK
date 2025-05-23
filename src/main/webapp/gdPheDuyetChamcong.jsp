@@ -199,7 +199,7 @@
                             record.getActualStartTime(), 
                             record.getActualEndTime()
                         ).toMillis() / (1000.0 * 60 * 60);
-                        double basePayment = Math.ceil(actualHours * hourlyRate);
+                        double basePayment = actualHours * hourlyRate;
                         double totalPayment = basePayment - record.getLateFee() - record.getEarlyFee() + record.getBonus();
                     %>
                         <tr>
