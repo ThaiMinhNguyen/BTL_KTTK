@@ -138,16 +138,6 @@
                 isWeekEnded = true;
             }
             
-            // Hoặc nếu ngày hôm nay nằm trong tuần tiếp theo
-            WeekFields weekFields = WeekFields.of(Locale.getDefault());
-            int startWeek = startLocalDate.get(weekFields.weekOfWeekBasedYear());
-            int startYear = startLocalDate.get(weekFields.weekBasedYear());
-            int todayWeek = today.get(weekFields.weekOfWeekBasedYear());
-            int todayYear = today.get(weekFields.weekBasedYear());
-            
-            if (todayYear > startYear || (todayYear == startYear && todayWeek > startWeek)) {
-                isWeekEnded = true;
-            }
         }
     %>
     <div class="container">
