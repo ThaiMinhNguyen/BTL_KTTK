@@ -53,7 +53,8 @@ public class TimeRecordDAO extends DAO {
                 timeRecord.setLateFee(rs.getDouble("lateFee"));
                 timeRecord.setEarlyFee(rs.getDouble("earlyFee"));
                 timeRecord.setBonus(rs.getDouble("bonus"));
-
+                timeRecord.setAmount(rs.getDouble("amount"));
+                
                 // Lấy thông tin EmployeeShift
                 int employeeShiftId = rs.getInt("tblEmployeeShiftId");
                 EmployeeShift employeeShift = employeeShiftDAO.getEmployeeShiftById(employeeShiftId);
@@ -186,14 +187,21 @@ public class TimeRecordDAO extends DAO {
             double earlyFee = calculateEarlyFee(timeRecord, 0.5); // 0.5 đồng/phút về sớm
             double overtimeBonus = calculateOvertimeBonus(timeRecord, 1.5, hourlyRate); // 150% lương cho làm thêm giờ
 
-            // 5. Set các giá trị đã tính
+            // 5. Tính toán amount (số giờ làm việc * hourlyRate - lateFee - earlyFee + overtimeBonus)
+            long seconds = ChronoUnit.SECONDS.between(actualStartTime, actualEndTime);
+            double hours = seconds / 3600.0;
+            double baseAmount = hours * hourlyRate;
+            double amount = baseAmount - lateFee - earlyFee + overtimeBonus;
+
+            // 6. Set các giá trị đã tính
             timeRecord.setLateFee(lateFee);
             timeRecord.setEarlyFee(earlyFee);
             timeRecord.setBonus(overtimeBonus);
+            timeRecord.setAmount(amount);
 
-            // 6. Lưu vào database
-            String sql = "INSERT INTO TimeRecord (actualStartTime, actualEndTime, lateFee, earlyFee, bonus, tblEmployeeShiftId) " +
-                        "VALUES (?, ?, ?, ?, ?, ?)";
+            // 7. Lưu vào database
+            String sql = "INSERT INTO TimeRecord (actualStartTime, actualEndTime, lateFee, earlyFee, bonus, amount, tblEmployeeShiftId) " +
+                        "VALUES (?, ?, ?, ?, ?, ?, ?)";
             
             PreparedStatement ps = connection.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS);
             ps.setTimestamp(1, Timestamp.valueOf(actualStartTime));
@@ -201,14 +209,15 @@ public class TimeRecordDAO extends DAO {
             ps.setDouble(3, lateFee);
             ps.setDouble(4, earlyFee);
             ps.setDouble(5, overtimeBonus);
-            ps.setInt(6, employeeShiftId);
+            ps.setDouble(6, amount);
+            ps.setInt(7, employeeShiftId);
 
             int affectedRows = ps.executeUpdate();
             if (affectedRows == 0) {
                 throw new SQLException("Không thể tạo TimeRecord, không có dòng nào bị ảnh hưởng.");
             }
 
-            // 7. Lấy ID được tạo tự động
+            // 8. Lấy ID được tạo tự động
             try (ResultSet generatedKeys = ps.getGeneratedKeys()) {
                 if (generatedKeys.next()) {
                     timeRecord.setId(generatedKeys.getInt(1));

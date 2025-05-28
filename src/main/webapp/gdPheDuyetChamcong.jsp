@@ -192,29 +192,20 @@
                         <td colspan="8" style="text-align: center;">Không có dữ liệu chấm công nào.</td>
                     </tr>
                 <% } else { %>
-                    <% for(TimeRecord record : timeRecords) { 
-                        // Tính toán tiền công
-                        double hourlyRate = employee.getHourlyRate();
-                        double actualHours = java.time.Duration.between(
-                            record.getActualStartTime(), 
-                            record.getActualEndTime()
-                        ).toMillis() / (1000.0 * 60 * 60);
-                        double basePayment = actualHours * hourlyRate;
-                        double totalPayment = basePayment - record.getLateFee() - record.getEarlyFee() + record.getBonus();
-                    %>
+                    <% for(TimeRecord record : timeRecords) { %>
                         <tr>
                             <td><%= record.getId() %></td>
                             <td><%= record.getActualStartTime() != null ? record.getActualStartTime().format(localDateTimeFormatter) : "" %></td>
                             <td><%= record.getActualEndTime() != null ? record.getActualEndTime().format(localDateTimeFormatter) : "" %></td>
-                            <td><%= hourFormat.format(actualHours) %> giờ (<%= moneyFormat.format(basePayment) %> VNĐ)</td>
+                            <td><%= hourFormat.format(java.time.Duration.between(record.getActualStartTime(), record.getActualEndTime()).toMillis() / (1000.0 * 60 * 60)) %> giờ</td>
                             <td><%= record.getLateFee() > 0 ? "(-" + moneyFormat.format(record.getLateFee()) + " VNĐ)" : "-" %></td>
                             <td><%= record.getEarlyFee() > 0 ? "(-" + moneyFormat.format(record.getEarlyFee()) + " VNĐ)" : "-" %></td>
                             <td><%= record.getBonus() > 0 ? "(+" + moneyFormat.format(record.getBonus()) + " VNĐ)" : "-" %></td>
-                            <td><%= moneyFormat.format(totalPayment) %> VNĐ</td>
+                            <td><%= moneyFormat.format(record.getAmount()) %> VNĐ</td>
                         </tr>
                     <% 
-                        actualTotalPayment += totalPayment;
-                        } 
+                        actualTotalPayment += record.getAmount();
+                    } 
                     %>
                         <tr style="font-weight: bold; background-color: #f0f0f0;">
                             <td colspan="7" style="text-align: right;">Tổng tiền thực tế:</td>

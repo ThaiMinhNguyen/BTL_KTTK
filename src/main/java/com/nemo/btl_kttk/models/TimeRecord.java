@@ -10,6 +10,7 @@ public class TimeRecord implements Serializable {
     private double lateFee;
     private double earlyFee;
     private double bonus;
+    private double amount;
     private EmployeeShift employeeShift;
     private Payment payment;
     
@@ -24,6 +25,7 @@ public class TimeRecord implements Serializable {
         this.lateFee = 0.00;
         this.earlyFee = 0.00;
         this.bonus = 0.00;
+        this.amount = 0.00;
     }
     
     public TimeRecord(LocalDateTime actualStartTime, LocalDateTime actualEndTime, EmployeeShift employeeShift) {
@@ -33,6 +35,7 @@ public class TimeRecord implements Serializable {
         this.lateFee = 0.00;
         this.earlyFee = 0.00;
         this.bonus = 0.00;
+        this.amount = 0.00;
     }
 
     public int getId() {
@@ -83,6 +86,14 @@ public class TimeRecord implements Serializable {
         this.bonus = bonus;
     }
 
+    public double getAmount() {
+        return amount;
+    }
+
+    public void setAmount(double amount) {
+        this.amount = amount;
+    }
+
     public EmployeeShift getEmployeeShift() {
         return employeeShift;
     }
@@ -104,6 +115,7 @@ public class TimeRecord implements Serializable {
         return "TimeRecord{" + "id=" + id + ", actualStartTime=" + actualStartTime + 
                 ", actualEndTime=" + actualEndTime + ", lateFee=" + lateFee + 
                 ", earlyFee=" + earlyFee + ", bonus=" + bonus + 
+                ", amount=" + amount + 
                 ", employeeShift=" + employeeShift.getId() + '}';
     }
 } 

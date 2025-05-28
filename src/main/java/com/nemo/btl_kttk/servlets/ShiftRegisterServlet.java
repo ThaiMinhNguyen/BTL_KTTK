@@ -2,7 +2,6 @@ package com.nemo.btl_kttk.servlets;
 
 import com.nemo.btl_kttk.dao.EmployeeShiftDAO;
 import com.nemo.btl_kttk.dao.ShiftSlotDAO;
-import com.nemo.btl_kttk.dao.TimeRecordDAO;
 import com.nemo.btl_kttk.models.EmployeeShift;
 import com.nemo.btl_kttk.models.ShiftSlot;
 import com.nemo.btl_kttk.models.User;
@@ -23,13 +22,11 @@ public class ShiftRegisterServlet extends HttpServlet {
     
     private ShiftSlotDAO shiftSlotDAO;
     private EmployeeShiftDAO employeeShiftDAO;
-    private TimeRecordDAO timeRecordDAO;
     
     @Override
     public void init() throws ServletException {
         shiftSlotDAO = new ShiftSlotDAO();
         employeeShiftDAO = new EmployeeShiftDAO();
-        timeRecordDAO = new TimeRecordDAO();
     }
 
     @Override
