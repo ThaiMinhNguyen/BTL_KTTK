@@ -213,17 +213,17 @@
                     <% } %>
                         <%
                         // Tính bonus ngay sau khi có totalWorkHours và actualTotalPayment
-                        if (totalWorkHours > 5) {
-                            bonus = actualTotalPayment * 0.2; // 20% của tổng tiền
+                        if (totalWorkHours > 10) {
+                            bonus = actualTotalPayment * 0.2;
                         }
                         %>
                         <tr style="font-weight: bold; background-color: #f0f0f0;">
                             <td colspan="6" style="text-align: right;">Tổng tiền công:</td>
                             <td><%= moneyFormat.format(actualTotalPayment) %> VNĐ</td>
                         </tr>
-                        <% if (totalWorkHours > 5) { %>
+                        <% if (totalWorkHours > 10) { %>
                             <tr style="font-weight: bold; background-color: #e6ffe6;">
-                                <td colspan="6" style="text-align: right;">Thưởng (20% - làm việc > 20 giờ):</td>
+                                <td colspan="6" style="text-align: right;">Thưởng (20% - làm việc > 10 giờ):</td>
                                 <td><%= moneyFormat.format(bonus) %> VNĐ</td>
                             </tr>
                             <tr style="font-weight: bold; background-color: #f0f0f0;">
@@ -267,7 +267,7 @@
                 </form>
                 <% if (bonus > 0) { %>
                     <div class="success-message">
-                        Nhân viên đã làm việc <%= hourFormat.format(totalWorkHours) %> giờ (> 20 giờ), 
+                        Nhân viên đã làm việc <%= hourFormat.format(totalWorkHours) %> giờ (> 10 giờ), 
                         được thưởng thêm 20%: <%= moneyFormat.format(bonus) %> VNĐ
                     </div>
                 <% } %>
