@@ -185,13 +185,24 @@ public class PaymentServlet extends HttpServlet {
             return;
         }
 
-        //Lấy paymentId
+        //Lấy paymentId và các tham số khác
         String paymentIdStr = request.getParameter("paymentId");
         String actualTotalPaymentStr = request.getParameter("actualTotalPayment");
+        String bonusStr = request.getParameter("bonus");
 
         try {
             int paymentId = Integer.parseInt(paymentIdStr);
-            double actualTotalPayment = Double.parseDouble(actualTotalPaymentStr);
+            double actualTotalPaymentFromForm = Double.parseDouble(actualTotalPaymentStr);
+            double bonus = Double.parseDouble(bonusStr);
+            
+            // Tổng tiền thực tế = tiền công cơ bản + bonus
+            double actualTotalPayment = actualTotalPaymentFromForm + bonus;
+            
+            // Debug logging
+            System.out.println("PaymentServlet.approvePayment - Debug Info:");
+            System.out.println("  actualTotalPaymentFromForm: " + actualTotalPaymentFromForm);
+            System.out.println("  bonus: " + bonus);
+            System.out.println("  actualTotalPayment (final): " + actualTotalPayment);
             
             //Lấy payment
             Payment payment = paymentDAO.getPaymentById(paymentId);
@@ -218,8 +229,8 @@ public class PaymentServlet extends HttpServlet {
                     return;
                 }
                 
-                //chuyển status thành APPROVED và cập nhật số tiền thực tế và paymentDate
-                boolean success = paymentDAO.approvePayment(paymentId, user.getId(), new Date(), actualTotalPayment);
+                //chuyển status thành APPROVED và cập nhật số tiền thực tế, bonus và paymentDate
+                boolean success = paymentDAO.approvePayment(paymentId, user.getId(), new Date(), actualTotalPayment, bonus);
                 
                 if (success) {
                     // Lưu thông báo thành công vào session

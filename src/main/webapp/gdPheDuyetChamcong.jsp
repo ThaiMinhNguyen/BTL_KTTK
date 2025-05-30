@@ -113,6 +113,8 @@
         DecimalFormat moneyFormat = new DecimalFormat("#,##0");
 
         double actualTotalPayment = 0;
+        double totalWorkHours = 0;
+        double bonus = 0; 
         
         // Kiểm tra xem đã hết tuần chưa
         boolean isWeekEnded = false;
@@ -182,35 +184,53 @@
                     <th>Tổng giờ</th>
                     <th>Đi muộn</th>
                     <th>Về sớm</th>
-                    <th>Làm thêm</th>
                     <th>Tiền công</th>
                 </tr>
             </thead>
             <tbody>
                 <% if(timeRecords == null || timeRecords.isEmpty()) { %>
                     <tr>
-                        <td colspan="8" style="text-align: center;">Không có dữ liệu chấm công nào.</td>
+                        <td colspan="7" style="text-align: center;">Không có dữ liệu chấm công nào.</td>
                     </tr>
                 <% } else { %>
-                    <% for(TimeRecord record : timeRecords) { %>
+                    <% for(TimeRecord record : timeRecords) { 
+                        // Tính toán tiền công cho từng TimeRecord
+                        double hours = java.time.Duration.between(record.getActualStartTime(), record.getActualEndTime()).toMillis() / (1000.0 * 60 * 60);
+                        totalWorkHours += hours;
+                        double baseAmount = hours * employee.getHourlyRate();
+                        double recordAmount = baseAmount - record.getLateFee() - record.getEarlyFee();
+                        actualTotalPayment += recordAmount;
+                    %>
                         <tr>
                             <td><%= record.getId() %></td>
                             <td><%= record.getActualStartTime() != null ? record.getActualStartTime().format(localDateTimeFormatter) : "" %></td>
                             <td><%= record.getActualEndTime() != null ? record.getActualEndTime().format(localDateTimeFormatter) : "" %></td>
-                            <td><%= hourFormat.format(java.time.Duration.between(record.getActualStartTime(), record.getActualEndTime()).toMillis() / (1000.0 * 60 * 60)) %> giờ</td>
+                            <td><%= hourFormat.format(hours) %> giờ</td>
                             <td><%= record.getLateFee() > 0 ? "(-" + moneyFormat.format(record.getLateFee()) + " VNĐ)" : "-" %></td>
                             <td><%= record.getEarlyFee() > 0 ? "(-" + moneyFormat.format(record.getEarlyFee()) + " VNĐ)" : "-" %></td>
-                            <td><%= record.getBonus() > 0 ? "(+" + moneyFormat.format(record.getBonus()) + " VNĐ)" : "-" %></td>
-                            <td><%= moneyFormat.format(record.getAmount()) %> VNĐ</td>
+                            <td><%= moneyFormat.format(recordAmount) %> VNĐ</td>
                         </tr>
-                    <% 
-                        actualTotalPayment += record.getAmount();
-                    } 
-                    %>
+                    <% } %>
+                        <%
+                        // Tính bonus ngay sau khi có totalWorkHours và actualTotalPayment
+                        if (totalWorkHours > 5) {
+                            bonus = actualTotalPayment * 0.2; // 20% của tổng tiền
+                        }
+                        %>
                         <tr style="font-weight: bold; background-color: #f0f0f0;">
-                            <td colspan="7" style="text-align: right;">Tổng tiền thực tế:</td>
+                            <td colspan="6" style="text-align: right;">Tổng tiền công:</td>
                             <td><%= moneyFormat.format(actualTotalPayment) %> VNĐ</td>
                         </tr>
+                        <% if (totalWorkHours > 5) { %>
+                            <tr style="font-weight: bold; background-color: #e6ffe6;">
+                                <td colspan="6" style="text-align: right;">Thưởng (20% - làm việc > 20 giờ):</td>
+                                <td><%= moneyFormat.format(bonus) %> VNĐ</td>
+                            </tr>
+                            <tr style="font-weight: bold; background-color: #f0f0f0;">
+                                <td colspan="6" style="text-align: right;">Tổng tiền thực tế (bao gồm thưởng):</td>
+                                <td><%= moneyFormat.format(actualTotalPayment + bonus) %> VNĐ</td>
+                            </tr>
+                        <% } %>
                 <% } %>
             </tbody>
         </table>
@@ -219,11 +239,17 @@
             <div class="success-message">
                 Đã thanh toán cho nhân viên bởi: <%= payment.getProcessedBy().getUsername() %> vào 
                 <%= dateTimeFormat.format(payment.getPaymentDate()) %>
+                <% if(payment.getBonus() > 0) { %>
+                    <br>Thưởng (20%): <%= moneyFormat.format(payment.getBonus()) %> VNĐ
+                <% } %>
             </div>
         <% } else if(payment != null && "APPROVED".equals(payment.getStatus())) { %>
             <div class="success-message">
                 Đã phê duyệt thanh toán bởi: <%= payment.getProcessedBy().getUsername() %> vào 
                 <%= dateTimeFormat.format(payment.getPaymentDate()) %>
+                <% if(payment.getBonus() > 0) { %>
+                    <br>Thưởng (20%): <%= moneyFormat.format(payment.getBonus()) %> VNĐ
+                <% } %>
             </div>
             <form action="process-payment" method="POST">
                 <input type="hidden" name="action" value="confirm_payment">
@@ -236,9 +262,15 @@
                     <input type="hidden" name="action" value="approve_payment">
                     <input type="hidden" name="paymentId" value="<%= payment != null ? payment.getId() : "" %>">
                     <input type="hidden" name="actualTotalPayment" value="<%= actualTotalPayment %>">
-                    
+                    <input type="hidden" name="bonus" value="<%= bonus %>">
                     <button type="submit" class="approval-button">Phê duyệt</button>
                 </form>
+                <% if (bonus > 0) { %>
+                    <div class="success-message">
+                        Nhân viên đã làm việc <%= hourFormat.format(totalWorkHours) %> giờ (> 20 giờ), 
+                        được thưởng thêm 20%: <%= moneyFormat.format(bonus) %> VNĐ
+                    </div>
+                <% } %>
             <% } else { %>
                 <div class="warning-message">
                     Không thể phê duyệt thanh toán khi tuần chấm công chưa kết thúc. Vui lòng quay lại vào cuối tuần.

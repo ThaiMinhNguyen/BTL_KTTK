@@ -233,6 +233,7 @@
                         <th>Employee</th>
                         <th>TotalHour</th>
                         <th>Amount</th>
+                        <th>Bonus</th>
                         <th>Status</th>
                         <th>Action</th>
                     </tr>
@@ -240,7 +241,7 @@
                 <tbody>
                     <% if(payments == null || payments.isEmpty()) { %>
                         <tr>
-                            <td colspan="6" style="text-align: center;">Không có dữ liệu chấm công nào cho tuần này.</td>
+                            <td colspan="7" style="text-align: center;">Không có dữ liệu chấm công nào cho tuần này.</td>
                         </tr>
                     <% } else { %>
                         <% for(Payment payment : payments) { %>
@@ -249,6 +250,7 @@
                                 <td><%= payment.getEmployee().getUsername() %></td>
                                 <td><%= hourFormat.format(payment.getTotalHour()) %> giờ</td>
                                 <td><%= moneyFormat.format(payment.getAmount()) %> VNĐ</td>
+                                <td><%= payment.getBonus() > 0 ? moneyFormat.format(payment.getBonus()) + " VNĐ" : "-" %></td>
                                 <td>
                                     <% if("PAID".equals(payment.getStatus())) { %>
                                         <span style="color: green;">Đã thanh toán</span>

@@ -31,6 +31,7 @@ public class PaymentDAO extends DAO {
                 payment.setPaymentDate(rs.getDate("paymentDate"));
                 payment.setTotalHour(rs.getDouble("totalHour"));
                 payment.setAmount(rs.getDouble("amount"));
+                payment.setBonus(rs.getDouble("bonus"));
                 payment.setStatus(rs.getString("status"));
                 
                 User employee = userDAO.getUserById(rs.getInt("tblEmployeeId"));
@@ -38,7 +39,6 @@ public class PaymentDAO extends DAO {
                 
                 User processedBy = userDAO.getUserById(rs.getInt("tblProcessedById"));
                 payment.setProcessedBy(processedBy);
-                
                 
                 return payment;
             }
@@ -48,14 +48,15 @@ public class PaymentDAO extends DAO {
         return null;
     }
     
-    public boolean approvePayment(int paymentId, int processedById, Date paymentDate, double actualAmount) {
-        String sql = "UPDATE Payment SET paymentDate = ?, status = 'APPROVED', tblProcessedById = ?, amount = ? WHERE id = ?";
+    public boolean approvePayment(int paymentId, int processedById, Date paymentDate, double actualAmount, double bonus) {
+        String sql = "UPDATE Payment SET paymentDate = ?, status = 'APPROVED', tblProcessedById = ?, amount = ?, bonus = ? WHERE id = ?";
         try {
             PreparedStatement ps = connection.prepareStatement(sql);
             ps.setDate(1, new java.sql.Date(paymentDate.getTime()));
             ps.setInt(2, processedById);
             ps.setDouble(3, actualAmount);
-            ps.setInt(4, paymentId);
+            ps.setDouble(4, bonus);
+            ps.setInt(5, paymentId);
             
             int affectedRows = ps.executeUpdate();
             return affectedRows > 0;
@@ -80,8 +81,6 @@ public class PaymentDAO extends DAO {
         }
     }
     
-
-    
     public List<Payment> getPaymentsByWeek(Date weekStartDate) {
         List<Payment> payments = new ArrayList<>();
         String sql = "SELECT * FROM Payment WHERE weekStartDate = ?";
@@ -96,6 +95,7 @@ public class PaymentDAO extends DAO {
                 payment.setPaymentDate(rs.getDate("paymentDate"));
                 payment.setTotalHour(rs.getDouble("totalHour"));
                 payment.setAmount(rs.getDouble("amount"));
+                payment.setBonus(rs.getDouble("bonus"));
                 payment.setStatus(rs.getString("status"));
                 
                 User employee = userDAO.getUserById(rs.getInt("tblEmployeeId"));

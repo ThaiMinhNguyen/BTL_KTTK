@@ -11,6 +11,7 @@ public class Payment implements Serializable {
     private Date paymentDate;
     private double totalHour;
     private double amount;
+    private double bonus;
     private String status;
     private User processedBy;
     private List<TimeRecord> timeRecords;
@@ -18,23 +19,25 @@ public class Payment implements Serializable {
     public Payment() {
     }
     
-    public Payment(int id, User employee, Date weekStartDate, Date paymentDate, double totalHour, double amount, String status, User processedBy) {
+    public Payment(int id, User employee, Date weekStartDate, Date paymentDate, double totalHour, double amount, double bonus, String status, User processedBy) {
         this.id = id;
         this.employee = employee;
         this.weekStartDate = weekStartDate;
         this.paymentDate = paymentDate;
         this.totalHour = totalHour;
         this.amount = amount;
+        this.bonus = bonus;
         this.status = status;
         this.processedBy = processedBy;
     }
     
-    public Payment(User employee, Date weekStartDate, Date paymentDate, double totalHour, double amount, String status, User processedBy) {
+    public Payment(User employee, Date weekStartDate, Date paymentDate, double totalHour, double amount, double bonus, String status, User processedBy) {
         this.employee = employee;
         this.weekStartDate = weekStartDate;
         this.paymentDate = paymentDate;
         this.totalHour = totalHour;
         this.amount = amount;
+        this.bonus = bonus;
         this.status = status;
         this.processedBy = processedBy;
     }
@@ -87,6 +90,14 @@ public class Payment implements Serializable {
         this.amount = amount;
     }
 
+    public double getBonus() {
+        return bonus;
+    }
+
+    public void setBonus(double bonus) {
+        this.bonus = bonus;
+    }
+
     public String getStatus() {
         return status;
     }
@@ -115,6 +126,6 @@ public class Payment implements Serializable {
     public String toString() {
         return "Payment{" + "id=" + id + ", employee=" + employee.getUsername() + ", weekStartDate=" + weekStartDate + 
                 ", paymentDate=" + paymentDate + ", totalHour=" + totalHour + ", amount=" + amount + 
-                ", status=" + status + ", processedBy=" + (processedBy != null ? processedBy.getUsername() : "null") + '}';
+                ", bonus=" + bonus + ", status=" + status + ", processedBy=" + (processedBy != null ? processedBy.getUsername() : "null") + '}';
     }
 } 

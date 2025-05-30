@@ -49,11 +49,8 @@ public class TimeRecordDAO extends DAO {
                     timeRecord.setActualEndTime(endTimestamp.toLocalDateTime());
                 }
 
-                // Đọc các trường mới
                 timeRecord.setLateFee(rs.getDouble("lateFee"));
                 timeRecord.setEarlyFee(rs.getDouble("earlyFee"));
-                timeRecord.setBonus(rs.getDouble("bonus"));
-                timeRecord.setAmount(rs.getDouble("amount"));
                 
                 // Lấy thông tin EmployeeShift
                 int employeeShiftId = rs.getInt("tblEmployeeShiftId");
@@ -74,7 +71,6 @@ public class TimeRecordDAO extends DAO {
             return 0.0;
         }
 
-        // Chuyển đổi Date sang LocalDateTime
         LocalDateTime scheduledStartTime = timeRecord.getEmployeeShift().getShiftSlot().getStartTime()
                 .toInstant().atZone(java.time.ZoneId.systemDefault()).toLocalDateTime();
         LocalDateTime actualStartTime = timeRecord.getActualStartTime();
@@ -92,7 +88,6 @@ public class TimeRecordDAO extends DAO {
             return 0.0;
         }
 
-        // Chuyển đổi Date sang LocalDateTime
         LocalDateTime scheduledEndTime = timeRecord.getEmployeeShift().getShiftSlot().getEndTime()
                 .toInstant().atZone(java.time.ZoneId.systemDefault()).toLocalDateTime();
         LocalDateTime actualEndTime = timeRecord.getActualEndTime();
@@ -110,35 +105,31 @@ public class TimeRecordDAO extends DAO {
             return 0.0;
         }
 
-        // Tính tổng số giờ thực tế
         double actualHours = java.time.Duration.between(
             timeRecord.getActualStartTime(),
             timeRecord.getActualEndTime()
         ).toMillis() / (1000.0 * 60 * 60);
 
-        // Tính tổng số giờ đăng ký
         Date scheduledStart = timeRecord.getEmployeeShift().getShiftSlot().getStartTime();
         Date scheduledEnd = timeRecord.getEmployeeShift().getShiftSlot().getEndTime();
         double scheduledHours = (scheduledEnd.getTime() - scheduledStart.getTime()) / (1000.0 * 60 * 60);
 
-        // Nếu số giờ thực tế lớn hơn số giờ đăng ký
         if (actualHours > scheduledHours) {
             double overtimeHours = actualHours - scheduledHours;
-            return overtimeHours * hourlyRate * (overtimeRate - 1.0); // Chỉ tính phần thưởng thêm
+            return overtimeHours * hourlyRate * (overtimeRate - 1.0);
         }
 
         return 0.0;
     }
 
-    public boolean updateTimeRecordFees(int timeRecordId, double lateFee, double earlyFee, double bonus) {
-        String sql = "UPDATE TimeRecord SET lateFee = ?, earlyFee = ?, bonus = ? WHERE id = ?";
+    public boolean updateTimeRecordFees(int timeRecordId, double lateFee, double earlyFee) {
+        String sql = "UPDATE TimeRecord SET lateFee = ?, earlyFee = ? WHERE id = ?";
         
         try {
             PreparedStatement ps = connection.prepareStatement(sql);
             ps.setDouble(1, lateFee);
             ps.setDouble(2, earlyFee);
-            ps.setDouble(3, bonus);
-            ps.setInt(4, timeRecordId);
+            ps.setInt(3, timeRecordId);
             
             int rowsAffected = ps.executeUpdate();
             return rowsAffected > 0;
@@ -158,10 +149,9 @@ public class TimeRecordDAO extends DAO {
         // Cập nhật TimeRecord object
         timeRecord.setLateFee(lateFee);
         timeRecord.setEarlyFee(earlyFee);
-        timeRecord.setBonus(overtimeBonus);
         
         // Cập nhật database
-        return updateTimeRecordFees(timeRecord.getId(), lateFee, earlyFee, overtimeBonus);
+        return updateTimeRecordFees(timeRecord.getId(), lateFee, earlyFee);
     }
 
     public TimeRecord createTimeRecord(LocalDateTime actualStartTime, LocalDateTime actualEndTime, int employeeShiftId) {
@@ -182,42 +172,31 @@ public class TimeRecordDAO extends DAO {
             timeRecord.setActualEndTime(actualEndTime);
             timeRecord.setEmployeeShift(employeeShift);
 
-            // 4. Tính toán các khoản phí và thưởng với giá trị mặc định
+            // 4. Tính toán các khoản phí với giá trị mặc định
             double lateFee = calculateLateFee(timeRecord, 0.5);  // 0.5 đồng/phút đi muộn
             double earlyFee = calculateEarlyFee(timeRecord, 0.5); // 0.5 đồng/phút về sớm
-            double overtimeBonus = calculateOvertimeBonus(timeRecord, 1.5, hourlyRate); // 150% lương cho làm thêm giờ
 
-            // 5. Tính toán amount (số giờ làm việc * hourlyRate - lateFee - earlyFee + overtimeBonus)
-            long seconds = ChronoUnit.SECONDS.between(actualStartTime, actualEndTime);
-            double hours = seconds / 3600.0;
-            double baseAmount = hours * hourlyRate;
-            double amount = baseAmount - lateFee - earlyFee + overtimeBonus;
-
-            // 6. Set các giá trị đã tính
+            // 5. Set các giá trị đã tính
             timeRecord.setLateFee(lateFee);
             timeRecord.setEarlyFee(earlyFee);
-            timeRecord.setBonus(overtimeBonus);
-            timeRecord.setAmount(amount);
 
-            // 7. Lưu vào database
-            String sql = "INSERT INTO TimeRecord (actualStartTime, actualEndTime, lateFee, earlyFee, bonus, amount, tblEmployeeShiftId) " +
-                        "VALUES (?, ?, ?, ?, ?, ?, ?)";
+            // 6. Lưu vào database
+            String sql = "INSERT INTO TimeRecord (actualStartTime, actualEndTime, lateFee, earlyFee, tblEmployeeShiftId) " +
+                        "VALUES (?, ?, ?, ?, ?)";
             
             PreparedStatement ps = connection.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS);
             ps.setTimestamp(1, Timestamp.valueOf(actualStartTime));
             ps.setTimestamp(2, Timestamp.valueOf(actualEndTime));
             ps.setDouble(3, lateFee);
             ps.setDouble(4, earlyFee);
-            ps.setDouble(5, overtimeBonus);
-            ps.setDouble(6, amount);
-            ps.setInt(7, employeeShiftId);
+            ps.setInt(5, employeeShiftId);
 
             int affectedRows = ps.executeUpdate();
             if (affectedRows == 0) {
                 throw new SQLException("Không thể tạo TimeRecord, không có dòng nào bị ảnh hưởng.");
             }
 
-            // 8. Lấy ID được tạo tự động
+            // 7. Lấy ID được tạo tự động
             try (ResultSet generatedKeys = ps.getGeneratedKeys()) {
                 if (generatedKeys.next()) {
                     timeRecord.setId(generatedKeys.getInt(1));
