@@ -125,4 +125,85 @@ public class EmployeeShiftDAO extends DAO {
             return false;
         }
     }
+    
+    public boolean managerRegisterShiftForEmployee(int employeeId, int shiftId) {
+        // kiểm tra xem shift có available không
+        ShiftSlotDAO ssDAO = new ShiftSlotDAO();
+        if (!ssDAO.isShiftAvailable(shiftId)) {
+            return false;
+        }
+        
+        // kiểm tra xem employee đã đăng ký shift này chưa
+        String checkSql = "SELECT COUNT(*) FROM EmployeeShift WHERE tblUserId = ? AND tblShiftSlotId = ?";
+        try {
+            PreparedStatement checkPs = connection.prepareStatement(checkSql);
+            checkPs.setInt(1, employeeId);
+            checkPs.setInt(2, shiftId);
+            ResultSet rs = checkPs.executeQuery();
+            if (rs.next() && rs.getInt(1) > 0) {
+                return false; // Employee đã đăng ký shift này rồi
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+        
+        // đăng ký shift cho employee
+        String sql = "INSERT INTO EmployeeShift (registrationDate, tblShiftSlotId, tblUserId) VALUES (?, ?, ?)";
+        try {
+            PreparedStatement ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+            ps.setTimestamp(1, Timestamp.valueOf(LocalDateTime.now()));
+            ps.setInt(2, shiftId);
+            ps.setInt(3, employeeId);
+            
+            int affectedRows = ps.executeUpdate();
+            return affectedRows > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+    
+    public List<User> getEmployeesRegisteredForShift(int shiftId) {
+        List<User> registeredEmployees = new ArrayList<>();
+        String sql = "SELECT u.* FROM User u " +
+                     "INNER JOIN EmployeeShift es ON u.id = es.tblUserId " +
+                     "WHERE es.tblShiftSlotId = ? AND u.active = 1";
+        try {
+            PreparedStatement ps = connection.prepareStatement(sql);
+            ps.setInt(1, shiftId);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                User user = new User();
+                user.setId(rs.getInt("id"));
+                user.setUsername(rs.getString("username"));
+                user.setPassword(rs.getString("password"));
+                user.setName(rs.getString("name"));
+                user.setEmail(rs.getString("email"));
+                user.setPhone(rs.getString("phone"));
+                user.setHourlyRate(rs.getDouble("hourlyRate"));
+                user.setRole(rs.getString("role"));
+                user.setActive(rs.getBoolean("active"));
+                registeredEmployees.add(user);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return registeredEmployees;
+    }
+    
+    public int getRegisteredCountForShift(int shiftId) {
+        String sql = "SELECT COUNT(*) FROM EmployeeShift WHERE tblShiftSlotId = ?";
+        try {
+            PreparedStatement ps = connection.prepareStatement(sql);
+            ps.setInt(1, shiftId);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
 } 

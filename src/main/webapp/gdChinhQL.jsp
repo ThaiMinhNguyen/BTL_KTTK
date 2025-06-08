@@ -116,6 +116,7 @@
             
             <div class="functions">
                 <a href="schedule-management" class="function-btn" id="btnQuanLyLich">Quản lý lịch</a>
+                <a href="manager-assign-shift" class="function-btn" id="btnDangKyLichChoNV">Đăng ký lịch cho nhân viên</a>
                 <a href="payment-management" class="function-btn" id="btnThanhToanTienCong">Quản lý tiền công</a>
             </div>
         </div>

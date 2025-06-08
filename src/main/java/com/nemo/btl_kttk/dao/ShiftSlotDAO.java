@@ -44,7 +44,7 @@ public class ShiftSlotDAO extends DAO {
         String selectedDateStr = dateFormat.format(adjustedDate);
 
         // Truy vấn để lấy ca làm việc có startTime trong ngày được chọn
-        String sql = "SELECT * FROM ShiftSlot WHERE DATE(startTime) = ? AND status = 'ACTIVE'";
+        String sql = "SELECT * FROM ShiftSlot WHERE DATE(startTime) = ? AND status = 'ACTIVE' ORDER BY startTime";
         try {
             PreparedStatement ps = connection.prepareStatement(sql);
             ps.setString(1, selectedDateStr);
@@ -123,8 +123,6 @@ public class ShiftSlotDAO extends DAO {
         }
         return false;
     }
-
-    
 
     public boolean saveShiftSlots(List<ShiftSlot> shiftSlots) {
         if (shiftSlots == null || shiftSlots.isEmpty()) {

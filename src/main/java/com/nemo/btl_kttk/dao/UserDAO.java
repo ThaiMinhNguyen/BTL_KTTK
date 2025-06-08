@@ -4,6 +4,8 @@ import com.nemo.btl_kttk.models.User;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class UserDAO extends DAO {
     
@@ -60,6 +62,31 @@ public class UserDAO extends DAO {
             e.printStackTrace();
         }
         return null;
+    }
+    
+    public List<User> getAllEmployees() {
+        List<User> employees = new ArrayList<>();
+        String sql = "SELECT * FROM User WHERE role = 'EMPLOYEE' AND active = 1 ORDER BY name";
+        try {
+            PreparedStatement ps = connection.prepareStatement(sql);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                User user = new User();
+                user.setId(rs.getInt("id"));
+                user.setUsername(rs.getString("username"));
+                user.setPassword(rs.getString("password"));
+                user.setName(rs.getString("name"));
+                user.setEmail(rs.getString("email"));
+                user.setPhone(rs.getString("phone"));
+                user.setHourlyRate(rs.getDouble("hourlyRate"));
+                user.setRole(rs.getString("role"));
+                user.setActive(rs.getBoolean("active"));
+                employees.add(user);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return employees;
     }
       
 } 

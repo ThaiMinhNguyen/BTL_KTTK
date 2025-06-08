@@ -1,4 +1,5 @@
 com\nemo\btl_kttk\models\User.class
+com\nemo\btl_kttk\servlets\ManagerShiftAssignmentServlet.class
 com\nemo\btl_kttk\dao\TimeRecordDAO.class
 com\nemo\btl_kttk\JakartaRestConfiguration.class
 com\nemo\btl_kttk\servlets\ShiftRegisterServlet.class

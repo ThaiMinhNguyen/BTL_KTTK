@@ -197,7 +197,7 @@ public class PaymentServlet extends HttpServlet {
             
             // Tổng tiền thực tế = tiền công cơ bản + bonus
             double actualTotalPayment = actualTotalPaymentFromForm + bonus;
-            
+                
             // Debug logging
             System.out.println("PaymentServlet.approvePayment - Debug Info:");
             System.out.println("  actualTotalPaymentFromForm: " + actualTotalPaymentFromForm);
