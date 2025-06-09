@@ -39,7 +39,6 @@ public class ManagerShiftAssignmentServlet extends HttpServlet {
         HttpSession session = request.getSession();
         User currentUser = (User) session.getAttribute("user");
         
-        // Kiểm tra quyền truy cập (chỉ manager)
         if (currentUser == null || !"MANAGER".equals(currentUser.getRole())) {
             response.sendRedirect("gdDangnhap.jsp?error=access_denied");
             return;
@@ -53,7 +52,6 @@ public class ManagerShiftAssignmentServlet extends HttpServlet {
         HttpSession session = request.getSession();
         User currentUser = (User) session.getAttribute("user");
         
-        // Kiểm tra quyền truy cập (chỉ manager)
         if (currentUser == null || !"MANAGER".equals(currentUser.getRole())) {
             response.sendRedirect("gdDangnhap.jsp?error=access_denied");
             return;
@@ -71,11 +69,9 @@ public class ManagerShiftAssignmentServlet extends HttpServlet {
     }
     
     private void showAssignShiftForm(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        // Lấy danh sách tất cả nhân viên
         List<User> employees = userDAO.getAllEmployees();
         request.setAttribute("employees", employees);
         
-        // Forward đến trang JSP
         request.getRequestDispatcher("gdManagerAssignShift.jsp").forward(request, response);
     }
     
@@ -92,21 +88,20 @@ public class ManagerShiftAssignmentServlet extends HttpServlet {
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
             Date date = sdf.parse(selectedDate);
             
-            // Lấy danh sách ca làm việc theo ngày
+            //lấy ShiftSlot theo ngày
             List<ShiftSlot> shiftSlots = shiftSlotDAO.getAvailableShifts(date);
             
-            // Lấy danh sách tất cả nhân viên
             List<User> allEmployees = userDAO.getAllEmployees();
             
-            // Tạo Map lưu danh sách nhân viên chưa đăng ký cho từng shift
+            //tạo Map lưu employee chưa đăng ký cho từng shift
             Map<Integer, List<User>> availableEmployeesMap = new HashMap<>();
             Map<Integer, Integer> registeredCountMap = new HashMap<>();
             
+            //lấy employee chưa đăng ký
             for (ShiftSlot shift : shiftSlots) {
-                // Lấy danh sách nhân viên đã đăng ký ca này
+                //lấy employee đã đăng ký ca này
                 List<User> registeredEmployees = employeeShiftDAO.getEmployeesRegisteredForShift(shift.getId());
                 
-                // Tạo danh sách nhân viên chưa đăng ký
                 List<User> availableEmployees = new ArrayList<>();
                 for (User employee : allEmployees) {
                     boolean isRegistered = false;
@@ -152,7 +147,7 @@ public class ManagerShiftAssignmentServlet extends HttpServlet {
             int employeeId = Integer.parseInt(employeeIdStr);
             int shiftId = Integer.parseInt(shiftIdStr);
             
-            // Kiểm tra nhân viên có tồn tại không
+            //kiểm tra employee có tồn tại không
             User employee = userDAO.getUserById(employeeId);
             if (employee == null) {
                 request.setAttribute("errorMessage", "Nhân viên không tồn tại.");
@@ -160,7 +155,7 @@ public class ManagerShiftAssignmentServlet extends HttpServlet {
                 return;
             }
             
-            // Kiểm tra ca làm việc có tồn tại không
+            //kiểm tra shiftslot có tồn tại không
             ShiftSlot shiftSlot = shiftSlotDAO.getShiftSlotById(shiftId);
             if (shiftSlot == null) {
                 request.setAttribute("errorMessage", "Ca làm việc không tồn tại.");
@@ -168,7 +163,6 @@ public class ManagerShiftAssignmentServlet extends HttpServlet {
                 return;
             }
             
-            // Thực hiện đăng ký ca cho nhân viên
             boolean success = employeeShiftDAO.managerRegisterShiftForEmployee(employeeId, shiftId);
             
             if (success) {
