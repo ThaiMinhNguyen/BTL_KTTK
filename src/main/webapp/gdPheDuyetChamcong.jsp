@@ -120,22 +120,17 @@
         boolean isWeekEnded = false;
         
         if (weekStartDate != null) {
-            // Chuyển Date thành LocalDate
             LocalDate startLocalDate;
             if (weekStartDate instanceof java.sql.Date) {
-                // Chuyển đổi java.sql.Date sang LocalDate
                 startLocalDate = ((java.sql.Date) weekStartDate).toLocalDate();
             } else {
-                // Chuyển đổi java.util.Date sang LocalDate
                 startLocalDate = weekStartDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
             }
             
             LocalDate today = LocalDate.now();
             
-            // Tìm ngày chủ nhật cuối tuần (startDate + 6 ngày)
             LocalDate endOfWeek = startLocalDate.plusDays(6);
             
-            // Nếu ngày hiện tại lớn hơn hoặc bằng ngày cuối tuần -> đã hết tuần
             if (today.isAfter(endOfWeek) || today.isEqual(endOfWeek)) {
                 isWeekEnded = true;
             }
@@ -194,7 +189,7 @@
                     </tr>
                 <% } else { %>
                     <% for(TimeRecord record : timeRecords) { 
-                        // Tính toán tiền công cho từng TimeRecord
+                        //tính toán tiền công cho từng TimeRecord
                         double hours = java.time.Duration.between(record.getActualStartTime(), record.getActualEndTime()).toMillis() / (1000.0 * 60 * 60);
                         totalWorkHours += hours;
                         double baseAmount = hours * employee.getHourlyRate();
@@ -212,7 +207,7 @@
                         </tr>
                     <% } %>
                         <%
-                        // Tính bonus ngay sau khi có totalWorkHours và actualTotalPayment
+                        //tính bonus ngay sau khi có totalWorkHours và actualTotalPayment
                         if (totalWorkHours > 10) {
                             bonus = actualTotalPayment * 0.2;
                         }
