@@ -63,6 +63,8 @@ public class ManagerShiftAssignmentServlet extends HttpServlet {
             assignShiftToEmployee(request, response);
         } else if ("get_shifts".equals(action)) {
             getShiftsByDate(request, response);
+        } else if ("cancel_registration".equals(action)) {
+            cancelEmployeeRegistration(request, response);
         } else {
             showAssignShiftForm(request, response);
         }
@@ -96,8 +98,8 @@ public class ManagerShiftAssignmentServlet extends HttpServlet {
             //tạo Map lưu employee chưa đăng ký cho từng shift
             Map<Integer, List<User>> availableEmployeesMap = new HashMap<>();
             Map<Integer, Integer> registeredCountMap = new HashMap<>();
+            Map<Integer, List<User>> registeredEmployeesMap = new HashMap<>();
             
-            //lấy employee chưa đăng ký
             for (ShiftSlot shift : shiftSlots) {
                 //lấy employee đã đăng ký ca này
                 List<User> registeredEmployees = employeeShiftDAO.getEmployeesRegisteredForShift(shift.getId());
@@ -118,11 +120,13 @@ public class ManagerShiftAssignmentServlet extends HttpServlet {
                 
                 availableEmployeesMap.put(shift.getId(), availableEmployees);
                 registeredCountMap.put(shift.getId(), registeredEmployees.size());
+                registeredEmployeesMap.put(shift.getId(), registeredEmployees);
             }
             
             request.setAttribute("shiftSlots", shiftSlots);
             request.setAttribute("availableEmployeesMap", availableEmployeesMap);
             request.setAttribute("registeredCountMap", registeredCountMap);
+            request.setAttribute("registeredEmployeesMap", registeredEmployeesMap);
             request.setAttribute("selectedDate", selectedDate);
             
         } catch (ParseException e) {
@@ -169,6 +173,53 @@ public class ManagerShiftAssignmentServlet extends HttpServlet {
                 request.setAttribute("successMessage", "Đã đăng ký ca làm việc thành công cho nhân viên " + employee.getName());
             } else {
                 request.setAttribute("errorMessage", "Không thể đăng ký ca làm việc. Ca có thể đã đầy hoặc nhân viên đã đăng ký ca này.");
+            }
+            
+        } catch (NumberFormatException e) {
+            request.setAttribute("errorMessage", "Dữ liệu không hợp lệ.");
+        }
+        
+        getShiftsByDate(request, response);
+    }
+    
+    private void cancelEmployeeRegistration(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        String employeeIdStr = request.getParameter("employeeId");
+        String shiftIdStr = request.getParameter("shiftId");
+        String selectedDate = request.getParameter("selectedDate");
+        
+        if (employeeIdStr == null || shiftIdStr == null || selectedDate == null) {
+            request.setAttribute("errorMessage", "Thông tin không đầy đủ. Vui lòng thử lại.");
+            getShiftsByDate(request, response);
+            return;
+        }
+        
+        try {
+            int employeeId = Integer.parseInt(employeeIdStr);
+            int shiftId = Integer.parseInt(shiftIdStr);
+            
+            //kiểm tra nhân viên có tồn tại không
+            User employee = userDAO.getUserById(employeeId);
+            if (employee == null) {
+                request.setAttribute("errorMessage", "Nhân viên không tồn tại.");
+                getShiftsByDate(request, response);
+                return;
+            }
+            
+            //kiểm tra ca làm việc có tồn tại không
+            ShiftSlot shiftSlot = shiftSlotDAO.getShiftSlotById(shiftId);
+            if (shiftSlot == null) {
+                request.setAttribute("errorMessage", "Ca làm việc không tồn tại.");
+                getShiftsByDate(request, response);
+                return;
+            }
+            
+            
+            boolean success = employeeShiftDAO.cancelRegistrationByEmployeeAndShift(employeeId, shiftId);
+            
+            if (success) {
+                request.setAttribute("successMessage", "Đã hủy đăng ký ca làm việc cho nhân viên " + employee.getName());
+            } else {
+                request.setAttribute("errorMessage", "Không thể hủy đăng ký. Nhân viên có thể chưa đăng ký ca này.");
             }
             
         } catch (NumberFormatException e) {

@@ -206,4 +206,19 @@ public class EmployeeShiftDAO extends DAO {
         }
         return 0;
     }
+    
+    public boolean cancelRegistrationByEmployeeAndShift(int employeeId, int shiftId) {
+        String sql = "DELETE FROM EmployeeShift WHERE tblUserId = ? AND tblShiftSlotId = ?";
+        try {
+            PreparedStatement ps = connection.prepareStatement(sql);
+            ps.setInt(1, employeeId);
+            ps.setInt(2, shiftId);
+            
+            int affectedRows = ps.executeUpdate();
+            return affectedRows > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
 } 

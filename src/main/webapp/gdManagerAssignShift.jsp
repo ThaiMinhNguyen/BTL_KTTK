@@ -263,6 +263,58 @@
             font-style: italic;
             padding: 20px;
         }
+        
+        .registered-section {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #f0f8ff;
+            border: 1px solid #b3d9ff;
+            border-radius: 4px;
+        }
+        
+        .registered-section h5 {
+            margin: 0 0 10px 0;
+            color: #0066cc;
+            font-size: 14px;
+        }
+        
+        .registered-employee {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px 0;
+            border-bottom: 1px solid #e6f3ff;
+        }
+        
+        .registered-employee:last-child {
+            border-bottom: none;
+        }
+        
+        .employee-name {
+            font-size: 13px;
+            color: #333;
+        }
+        
+        .cancel-btn {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 3px 8px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 11px;
+            text-decoration: none;
+        }
+        
+        .cancel-btn:hover {
+            background-color: #c82333;
+        }
+        
+        .no-registered {
+            font-style: italic;
+            color: #999;
+            font-size: 12px;
+        }
     </style>
 </head>
 <body>
@@ -279,6 +331,7 @@
         List<ShiftSlot> shiftSlots = (List<ShiftSlot>) request.getAttribute("shiftSlots");
         Map<Integer, List<User>> availableEmployeesMap = (Map<Integer, List<User>>) request.getAttribute("availableEmployeesMap");
         Map<Integer, Integer> registeredCountMap = (Map<Integer, Integer>) request.getAttribute("registeredCountMap");
+        Map<Integer, List<User>> registeredEmployeesMap = (Map<Integer, List<User>>) request.getAttribute("registeredEmployeesMap");
         String selectedDate = (String) request.getAttribute("selectedDate");
     %>
     
@@ -340,6 +393,7 @@
                         <% for (ShiftSlot shift : shiftSlots) { 
                             List<User> availableEmployees = availableEmployeesMap != null ? availableEmployeesMap.get(shift.getId()) : null;
                             Integer registeredCount = registeredCountMap != null ? registeredCountMap.get(shift.getId()) : 0;
+                            List<User> registeredEmployees = registeredEmployeesMap != null ? registeredEmployeesMap.get(shift.getId()) : null;
                          %>
                             <div class="shift-card">
                                 <h4>Ca <%= shift.getSlotTemplate().getDayOfWeek() %></h4>
@@ -393,6 +447,30 @@
                                         Tất cả nhân viên đã đăng ký ca này
                                     </div>
                                 <% } %>
+                                
+                                <!-- Danh sách người đã đăng ký -->
+                                <div class="registered-section">
+                                    <h5>👥 Danh sách người đã đăng ký:</h5>
+                                    <% if (registeredEmployees != null && !registeredEmployees.isEmpty()) { %>
+                                        <% for (User employee : registeredEmployees) { %>
+                                            <div class="registered-employee">
+                                                <span class="employee-name">
+                                                    <%= employee.getName() %> (<%= employee.getUsername() %>)
+                                                </span>
+                                                <form method="post" action="manager-assign-shift" style="margin: 0; display: inline;" 
+                                                      onsubmit="return confirmCancel('<%= employee.getName() %>')">
+                                                    <input type="hidden" name="action" value="cancel_registration">
+                                                    <input type="hidden" name="employeeId" value="<%= employee.getId() %>">
+                                                    <input type="hidden" name="shiftId" value="<%= shift.getId() %>">
+                                                    <input type="hidden" name="selectedDate" value="<%= selectedDate %>">
+                                                    <button type="submit" class="cancel-btn">Hủy</button>
+                                                </form>
+                                            </div>
+                                        <% } %>
+                                    <% } else { %>
+                                        <div class="no-registered">Chưa có nhân viên nào đăng ký</div>
+                                    <% } %>
+                                </div>
                             </div>
                         <% } %>
                     </div>
@@ -447,6 +525,11 @@
             }
             
             return confirm('Bạn có chắc chắn muốn đăng ký ca này cho ' + employeeName + '?');
+        }
+        
+        // Xác nhận trước khi hủy đăng ký
+        function confirmCancel(employeeName) {
+            return confirm('Bạn có chắc chắn muốn hủy đăng ký ca này cho ' + employeeName + '?');
         }
     </script>
 </body>
