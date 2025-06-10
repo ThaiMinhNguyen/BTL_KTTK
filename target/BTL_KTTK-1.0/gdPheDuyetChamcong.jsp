@@ -207,7 +207,7 @@
                         </tr>
                     <% } %>
                         <%
-                        //tính bonus ngay sau khi có totalWorkHours và actualTotalPayment
+                        //tính bonus
                         if (totalWorkHours > 10) {
                             bonus = actualTotalPayment * 0.2;
                         }
