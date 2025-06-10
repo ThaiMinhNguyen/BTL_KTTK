@@ -40,7 +40,7 @@ public class ManagerShiftAssignmentServlet extends HttpServlet {
         User currentUser = (User) session.getAttribute("user");
         
         if (currentUser == null || !"MANAGER".equals(currentUser.getRole())) {
-            response.sendRedirect("gdDangnhap.jsp?error=access_denied");
+            response.sendRedirect("gdDangnhap.jsp?errorMessage=access_denied");
             return;
         }
         
